@@ -24,6 +24,7 @@
     window.dispatchEvent(new CustomEvent("lkt:settings-changed"));
   }
 
+  document.documentElement.dataset.lktVersion = chrome.runtime.getManifest().version;
   chrome.storage.sync.get(DEFAULTS, publish);
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync") return;

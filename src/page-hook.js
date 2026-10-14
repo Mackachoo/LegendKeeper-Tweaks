@@ -23,7 +23,13 @@
   "use strict";
   if (window.__LKT) return;
 
-  const LKT = (window.__LKT = { version: "0.2.0", patches: {} });
+  const LKT = (window.__LKT = {
+    // Set from manifest.json by bridge.js, so there's one place to bump the version.
+    get version() {
+      return document.documentElement.dataset.lktVersion || null;
+    },
+    patches: {},
+  });
   const log = (...a) => console.info("[LK Tweaks]", ...a);
   const warn = (...a) => console.warn("[LK Tweaks]", ...a);
 
