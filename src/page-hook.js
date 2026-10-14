@@ -10,11 +10,15 @@
 //      drive it.
 //   3. expose-entity-store: hands us LegendKeeper's client-side entity store (read only), used
 //      for cover images, tag counts and page names.
-//   4. expose-navigate: hands us the sidebar's navigate-to-page function (used by Recent pages).
+//   4. expose-navigate: hands us the sidebar's navigate-to-page function (Recent pages, tabs).
+//   5. expose-adapter: hands us LegendKeeper's data adapter, used only by "Apply settings to
+//      subpages" to read page tabs and to call the same update functions LegendKeeper's own page
+//      menu calls.
 //
-// Everything else is additive DOM/CSS on top of the React app. We never write to LegendKeeper's
-// data: the only things we drive are the sidebar filter and navigation (both through
-// LegendKeeper's own functions) and our own localStorage keys (all prefixed "lkt:").
+// Everything else is additive DOM/CSS on top of the React app. The only LegendKeeper data we
+// ever write is through "Apply settings to subpages", an explicit, confirmed action that uses
+// LegendKeeper's own update functions. Otherwise we only drive the sidebar filter and navigation
+// (through LegendKeeper's own functions) and our own localStorage keys (all prefixed "lkt:").
 (() => {
   "use strict";
   if (window.__LKT) return;
@@ -35,6 +39,13 @@
     coverIconsUseBanner: false,
     recentPages: true,
     slashToFilter: true,
+    keepTagFilter: true,
+    coverHoverPreview: false,
+    coverPrefetch: true,
+    readingTime: true,
+    tabs: true,
+    tabsMiddleClick: true,
+    bulkSettings: true,
   };
   function settings() {
     try {
@@ -84,6 +95,14 @@
       // ex=(0,eb.useNavigateInProject)()   — the same function LegendKeeper's shortcut bar uses
       re: /(\w+)=\(0,\w+\.useNavigateInProject\)\(\)/,
       replace: (m, nav) => `${m},__lktNavBind=window.__LKT&&window.__LKT.bindNavigate(${nav})`,
+    },
+    {
+      name: "expose-adapter",
+      gate: "lk:tree-filter-rule",
+      // key:`wiki-tree-expand-state:${o}`,reducer:E}),e3=(0,z.useAdapterOrNull)()
+      re: /(wiki-tree-expand-state:\$\{\w+\}`,reducer:\w+\}\),)(\w+)(=\(0,\w+\.useAdapterOrNull\)\(\))/,
+      replace: (m, pre, adapter, post) =>
+        `${pre}${adapter}${post},__lktAdapterBind=window.__LKT&&window.__LKT.bindAdapter(${adapter})`,
     },
   ];
 
@@ -168,6 +187,13 @@
   };
   LKT.store = () => entityStore;
 
+  let adapter = null;
+  LKT.bindAdapter = (a) => {
+    adapter = a;
+    return 0;
+  };
+  LKT.adapter = () => adapter;
+
   function getResource(id) {
     try {
       return (entityStore && entityStore.resources && entityStore.resources.get(id)) || null;
@@ -213,6 +239,8 @@
     navigateInProject = fn;
     return 0;
   };
+  const glyphClass = (g) => (g && /\bfa-/.test(g) ? g : "fas fa-file-lines");
+
   function navigateToResource(id) {
     if (typeof navigateInProject === "function") {
       try {
@@ -312,10 +340,25 @@
   // Feature: tag shortcuts
   // ---------------------------------------------------------------------------------------------
   const tagFilter = { tags: [], set: null };
+  const filterKey = () => (projectId() ? `lkt:tag-filter:${projectId()}` : null);
   LKT.bindTagFilter = (tags, setTags) => {
     const changed = tagFilter.tags !== tags;
+    const remounted = tagFilter.set !== setTags;
     tagFilter.tags = tags || [];
     tagFilter.set = setTags;
+    const key = filterKey();
+    if (key && settings().keepTagFilter) {
+      if (remounted) {
+        // The sidebar just mounted (page load or project switch) with LegendKeeper's empty
+        // default: restore the last filter. Deferred so we never set state mid-render.
+        const saved = loadJSON(key, []);
+        if (!tagFilter.tags.length && Array.isArray(saved) && saved.length) {
+          setTimeout(() => tagFilter.set === setTags && setTags(saved), 0);
+        }
+      } else if (changed) {
+        saveJSON(key, tagFilter.tags);
+      }
+    }
     if (changed) scheduleRender();
     return 0;
   };
@@ -577,6 +620,7 @@
     if (!el) {
       el = rows[name] = document.createElement("div");
       el.className = `lkt-row lkt-${name}`;
+      el.dataset.lktOwn = "";
       el.addEventListener("click", onRowClick);
     }
     // Keep our rows at the end of the area, in a stable order.
@@ -654,7 +698,7 @@
         a.title = r.name;
         a.dataset.lktNav = id;
         const icon = document.createElement("i");
-        icon.className = "lkt-recent-icon " + (r.iconGlyph && !r.iconGlyph.startsWith(":") ? r.iconGlyph : "fas fa-file-lines");
+        icon.className = "lkt-ic lkt-recent-icon " + glyphClass(r.iconGlyph);
         a.append(icon, Object.assign(document.createElement("span"), { className: "lkt-label", textContent: r.name }));
         row.appendChild(a);
       }
@@ -728,11 +772,59 @@
     return map;
   }
 
+  // Optionally look up covers for pages LegendKeeper hasn't loaded yet, using its own read-only
+  // batch loader (the one behind link previews). Once per project per browser session.
+  let prefetching = null;
+  async function prefetchCovers() {
+    const pid = projectId();
+    const key = coverKey();
+    if (!pid || !key || prefetching === pid || !adapter || typeof adapter.getResourcesByIds !== "function") return;
+    const doneKey = `lkt:covers-fetched:${pid}`;
+    try {
+      if (sessionStorage.getItem(doneKey)) return;
+    } catch {}
+    const ids = allResources()
+      .filter((r) => r && r.id && !r.deletedAt && (!r.hydrationLevel || r.hydrationLevel === "index"))
+      .map((r) => r.id);
+    if (!ids.length) return;
+    prefetching = pid;
+    try {
+      for (let i = 0; i < ids.length; i += 200) {
+        const batch = await adapter.getResourcesByIds(ids.slice(i, i + 200));
+        if (projectId() !== pid) return;
+        const map = coverCache.key === key ? coverCache.map : (coverCache = { key, map: loadJSON(key, {}) }).map;
+        for (const r of batch || []) {
+          if (!r || !r.id) continue;
+          const [img, banner] = imagesOf(r);
+          if (img || banner) map[r.id] = [img, banner];
+          else delete map[r.id];
+        }
+        saveJSON(key, map);
+        scheduleRender();
+        await new Promise((res) => setTimeout(res, 250));
+      }
+      try {
+        sessionStorage.setItem(doneKey, "1");
+      } catch {}
+    } catch (e) {
+      warn("couldn't load covers", e);
+    } finally {
+      prefetching = null;
+    }
+  }
+
+  LKT.coverUrl = (id) => {
+    const entry = coverCache.map[id];
+    if (!entry || !settings().coverIcons) return null;
+    return entry[0] || (settings().coverIconsUseBanner ? entry[1] : "") || null;
+  };
+
   function renderCoverStyles() {
     const s = settings();
     const pid = projectId();
     if (!s.coverIcons || !pid) return setStyle("covers", "");
     const map = refreshCoverCache();
+    if (s.coverPrefetch) prefetchCovers();
     const covers = [];
     for (const [id, [img, banner]] of Object.entries(map)) {
       const url = img || (s.coverIconsUseBanner ? banner : "");
@@ -760,6 +852,8 @@
       css += `${isLinks}>i.inline-flex:first-child{background-image:var(--lkt-cover);background-size:cover;background-position:center;border-radius:3px}\n`;
       css += `${isLinks}>i.inline-flex:first-child>*{visibility:hidden}\n`;
     }
+    // Our own links (tabs, recent pages) lead with an <i class="lkt-ic">.
+    css += `:is(${allLinks.join(",")})>i.lkt-ic{background-image:var(--lkt-cover);background-size:cover;background-position:center;border-radius:3px;color:transparent!important;opacity:1!important}\n`;
     setStyle("covers", css);
   }
 
@@ -794,6 +888,13 @@
     }
     markTagSources(document);
     renderCoverStyles();
+    for (const fn of renderHooks) {
+      try {
+        fn();
+      } catch (e) {
+        warn("feature render failed", e);
+      }
+    }
   }
 
   let raf = 0;
@@ -810,10 +911,37 @@
   }
   LKT.render = scheduleRender;
 
+  // Feature files (src/features/*.js) load after this one and register through LKT.
+  const renderHooks = [];
+  LKT.onRender = (fn) => {
+    renderHooks.push(fn);
+    scheduleRender();
+  };
+  LKT.util = {
+    settings,
+    log,
+    warn,
+    getResource,
+    allResources,
+    projectId,
+    currentResourceId,
+    loadJSON,
+    saveJSON,
+    navigateToResource,
+    flash,
+    setStyle,
+    cssString,
+    glyphClass,
+  };
+
   const start = () => {
+    const ours = (m) => {
+      const el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      return !!(el && el.closest("[data-lkt-own]"));
+    };
     new MutationObserver((muts) => {
-      // Ignore mutations inside our own rows.
-      if (muts.every((m) => Object.values(rows).some((r) => r.contains(m.target)))) return;
+      // Ignore mutations inside our own UI.
+      if (muts.every(ours)) return;
       scheduleRender();
     }).observe(document.body, { childList: true, subtree: true });
     window.addEventListener("lkt:settings-changed", () => {

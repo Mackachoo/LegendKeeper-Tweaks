@@ -187,3 +187,342 @@
     transform: translateY(-4px) scale(0.98);
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Page tabs — a strip under the top bar, lined up with the content pane.
+   The top bar is always dark; the active tab takes the page background so it joins the page.
+   --------------------------------------------------------------------------------------------- */
+.lkt-tabs {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 2px;
+  height: 34px;
+  padding: 0 8px 0 calc(var(--lkt-tabs-inset, 0px) + 8px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #0e0f0f;
+  scrollbar-width: none;
+}
+.lkt-tabs::-webkit-scrollbar {
+  display: none;
+}
+.lkt-tab {
+  position: relative;
+  display: flex;
+  flex: 0 1 180px;
+  align-items: center;
+  gap: 7px;
+  min-width: 96px;
+  max-width: 220px;
+  height: 30px;
+  padding: 0 6px 0 10px;
+  border-radius: 8px 8px 0 0;
+  color: #a1a1aa;
+  font-size: 12.5px;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 120ms, color 120ms;
+}
+.lkt-tab:hover {
+  background: #1b1d1f;
+  color: #e4e4e7;
+}
+.lkt-tab-active,
+.lkt-tab-active:hover {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+.lkt-tab .lkt-ic,
+.lkt-recent .lkt-ic {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 11px;
+}
+.lkt-tab .lkt-ic {
+  opacity: 0.8;
+}
+.lkt-tab-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lkt-tab-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+}
+.lkt-tab:hover .lkt-tab-close,
+.lkt-tab-active .lkt-tab-close {
+  opacity: 0.55;
+}
+.lkt-tab .lkt-tab-close:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 0.1);
+}
+.lkt-tab-active .lkt-tab-close:hover {
+  background: hsl(var(--foreground) / 0.1);
+}
+.lkt-tab-drop {
+  box-shadow: inset 2px 0 0 #a1a1aa;
+}
+
+/* Cover preview when hovering a page in the sidebar tree. */
+.lkt-cover-card {
+  position: fixed;
+  z-index: 2147483000;
+  width: 220px;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--background));
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-4px);
+  transition: opacity 120ms, transform 120ms;
+}
+.lkt-cover-card.lkt-show {
+  opacity: 1;
+  transform: none;
+}
+.lkt-cover-card img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+.lkt-cover-card div {
+  padding: 8px 10px;
+  color: hsl(var(--foreground));
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* Reading time, at the right of the breadcrumbs. */
+.lkt-reading-time {
+  margin-left: auto;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Items we add to LegendKeeper's tree context menu. */
+.lkt-menu-icon {
+  width: 16px;
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.85;
+}
+.lkt-menu-sep {
+  height: 1px;
+  margin: 4px -4px;
+  background: hsl(var(--border));
+}
+
+/* ---------------------------------------------------------------------------------------------
+   "Apply settings to subpages" dialog
+   --------------------------------------------------------------------------------------------- */
+.lkt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.5);
+  animation: lkt-fade 120ms ease-out;
+}
+@keyframes lkt-fade {
+  from {
+    opacity: 0;
+  }
+}
+.lkt-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(480px, 100%);
+  max-height: 85vh;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--background));
+  box-shadow: 0 24px 64px -16px rgb(0 0 0 / 0.6);
+  color: hsl(var(--foreground));
+  font-size: 14px;
+}
+.lkt-dialog-header {
+  padding: 18px 20px 6px;
+}
+.lkt-dialog h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.lkt-dialog-sub {
+  margin: 6px 0 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  line-height: 1.45;
+}
+.lkt-dialog-body {
+  padding: 4px 20px 14px;
+  overflow-y: auto;
+}
+.lkt-dialog h3 {
+  margin: 16px 0 4px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.lkt-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 2px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.lkt-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 3px 0;
+}
+.lkt-setting[hidden] {
+  display: none;
+}
+.lkt-setting.lkt-indent {
+  justify-content: flex-start;
+  padding-left: 12px;
+}
+.lkt-setting-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.lkt-setting small,
+.lkt-indent small {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+.lkt-seg {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border-radius: 8px;
+  background: hsl(var(--foreground) / 0.07);
+}
+.lkt-seg input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.lkt-seg label {
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms;
+}
+.lkt-seg input:checked + label {
+  background: hsl(var(--background));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  color: hsl(var(--foreground));
+}
+.lkt-seg input:focus-visible + label {
+  outline: 2px solid hsl(var(--muted-foreground));
+  outline-offset: 1px;
+}
+.lkt-input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.lkt-icon-preview {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: hsl(var(--foreground) / 0.07);
+  font-size: 15px;
+}
+.lkt-colour {
+  width: 40px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.lkt-dialog-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid hsl(var(--border));
+}
+.lkt-dialog-status {
+  flex: 1;
+  color: hsl(var(--muted-foreground));
+  font-size: 12.5px;
+}
+.lkt-dialog-status.lkt-error {
+  color: #f87171;
+}
+.lkt-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: 500 13px/1 inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+.lkt-btn:hover:not(:disabled) {
+  background: hsl(var(--foreground) / 0.06);
+}
+.lkt-btn-primary {
+  border-color: transparent;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.lkt-btn-primary:hover:not(:disabled) {
+  background: hsl(var(--foreground) / 0.88);
+}
+.lkt-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}

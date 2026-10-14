@@ -39,6 +39,13 @@
           </label>
           <label class="row">
             <span class="text">
+              <span class="title">Keep tag filter after reload</span>
+              <span class="desc">Your selected tags stay selected when you reload or come back to the project.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="keepTagFilter" />
+          </label>
+          <label class="row">
+            <span class="text">
               <span class="title">Recent pages</span>
               <span class="desc">Your last few pages in this project, under the filter box.</span>
             </span>
@@ -55,6 +62,46 @@
       </section>
 
       <section>
+        <h2>Tabs</h2>
+        <div class="group">
+          <label class="row">
+            <span class="text">
+              <span class="title">Page tabs</span>
+              <span class="desc">A tab bar above the page. Switch between open pages in one click; tabs are remembered per project.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="tabs" />
+          </label>
+          <label class="row sub" data-parent="tabs">
+            <span class="text">
+              <span class="title">Middle-click opens in a tab</span>
+              <span class="desc">Middle-click any page link, or right-click a page in the tree → Open in new tab.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="tabsMiddleClick" />
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Pages</h2>
+        <div class="group">
+          <label class="row">
+            <span class="text">
+              <span class="title">Reading time</span>
+              <span class="desc">Shows “4 min read · 900 words” next to the breadcrumbs on longer pages.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="readingTime" />
+          </label>
+          <label class="row">
+            <span class="text">
+              <span class="title">Apply settings to subpages</span>
+              <span class="desc">Right-click a page in the tree → “Set for subpages…” to set layout, lock, hide, sidebar and icon options on it and everything under it.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="bulkSettings" />
+          </label>
+        </div>
+      </section>
+
+      <section>
         <h2>Cover images</h2>
         <div class="group">
           <label class="row">
@@ -63,6 +110,13 @@
               <span class="desc">Swap a page's icon in the sidebar tree for a small square crop of its cover image.</span>
             </span>
             <input type="checkbox" role="switch" data-key="coverIcons" />
+          </label>
+          <label class="row sub" data-parent="coverIcons">
+            <span class="text">
+              <span class="title">Load covers for all pages</span>
+              <span class="desc">Fetch covers for pages you haven't opened yet (a few read-only requests, once per session).</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="coverPrefetch" />
           </label>
           <label class="row sub" data-parent="coverIcons">
             <span class="text">
@@ -78,11 +132,18 @@
             </span>
             <input type="checkbox" role="switch" data-key="coverIconsUseBanner" />
           </label>
+          <label class="row sub" data-parent="coverIcons">
+            <span class="text">
+              <span class="title">Preview on hover</span>
+              <span class="desc">Show a larger cover when you hover a page in the tree.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="coverHoverPreview" />
+          </label>
         </div>
       </section>
     </main>
 
-    <footer>Covers appear once LegendKeeper has loaded a page (open or hover it once) and are remembered after that.</footer>
+    <footer>Covers are remembered per project. With “Load covers for all pages” off, a page's cover appears once you've opened or hovered it.</footer>
     <script src="popup.js"></script>
   </body>
 </html>

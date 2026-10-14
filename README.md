@@ -2,13 +2,38 @@
 
 <img src="icons/icon128.png" width="96" align="right" alt="LegendKeeper Tweaks logo" />
 
-A Chrome extension that adds quality-of-life tweaks to [LegendKeeper](https://www.legendkeeper.com), the worldbuilding wiki for tabletop games and fiction: tag shortcuts, a sidebar filter that keeps your tree intact, cover images as page icons, recent pages and a quick-filter key.
+A Chrome extension that adds quality-of-life tweaks to [LegendKeeper](https://www.legendkeeper.com), the worldbuilding wiki for tabletop games and fiction: page tabs, tag shortcuts, a sidebar filter that keeps your tree intact, cover images as page icons, bulk page settings, recent pages and more.
 
-It only changes how LegendKeeper looks and behaves in your browser. It never writes to your worlds.
+It mostly changes how LegendKeeper looks and behaves in your browser. The one exception is **Set for subpages**, which changes page settings in your world, and only after you review and confirm it.
 
 This repo also holds two companion tools for working on LegendKeeper with Claude: an [MCP server](#legendkeeper-mcp-server) and a [Claude skill for the LegendKeeper SDK](#legendkeeper-sdk-skill).
 
 ## Features
+
+### Tabs
+
+**Page tabs.** A tab bar above the page, lined up with the content, so you can keep several pages open and switch in one click.
+
+- Navigating normally changes the page in the current tab, like a browser.
+- **Middle-click** any page link (sidebar tree, @mentions, backlinks…) to open it in a new tab, or right-click a page in the tree and choose **Open in new tab**.
+- Opening a page that's already in a tab switches to that tab.
+- Close a tab with **×** or a middle-click. Drag tabs to reorder them.
+- Tabs are remembered per project, so they survive a reload.
+
+### Pages
+
+**Set for subpages.** Right-click a page in the sidebar tree and choose **Set for subpages…** to change settings on that page and everything under it, in one go:
+
+| Group | Settings |
+| --- | --- |
+| Layout | Full-width, Table of contents |
+| Access | Lock, Hide |
+| Sidebar | Show property bar, Sidebar scrolling |
+| Icon | Icon (Font Awesome name) and icon colour |
+
+Each setting starts on **Leave**; only the ones you switch to On, Off or Set are changed. Pages that already have the value are skipped. Changes go through the same LegendKeeper functions its own page menu (⋮) uses, one page at a time, with progress shown. Permissions are deliberately not included.
+
+**Reading time.** Longer pages (300+ words) show "4 min read · 900 words" next to the breadcrumbs.
 
 ### Sidebar
 
@@ -27,6 +52,8 @@ Pins are saved per project, in this browser only.
 
 **Keep tree when filtering.** Normally, filtering by tag or name flattens the sidebar into an alphabetical list. With this on, matching pages stay where they are in the hierarchy. The parent pages needed to reach them are shown greyed out, and you can still click them.
 
+**Keep tag filter after reload.** The tags you've filtered by stay selected when you reload or come back to the project.
+
 **Recent pages.** The last few pages you opened in this project, as a compact row under the filter box. Clicking one switches page instantly, the same way LegendKeeper's own links do.
 
 **Quick filter key `/`.** Press `/` anywhere outside a text box to jump into the sidebar's "Find by name or #tag" box, ready to type.
@@ -35,9 +62,11 @@ Pins are saved per project, in this browser only.
 
 **Covers as page icons.** A page's icon in the sidebar tree becomes a small square crop of its cover image. The cover is the image property marked as cover, otherwise the page's main image. Optionally it can fall back to the page banner.
 
-**Also in page content.** The same thumbnails appear before @mention links in page text, and replace the icon in Backlinks and collection list rows.
+**Also in page content.** The same thumbnails appear before @mention links in page text, in tabs and recent pages, and replace the icon in Backlinks and collection list rows.
 
-LegendKeeper only loads a page's images once you've opened it or hovered it for a preview. The extension remembers the covers it has seen for each project, so once you've visited a page its icon stays.
+**Load covers for all pages.** LegendKeeper only loads a page's images once you've opened it. With this on (the default), the extension looks up covers for the rest using LegendKeeper's own read-only batch loader, the one behind link previews. That's a few requests per project, once per browser session. Covers are remembered per project either way.
+
+**Preview on hover** (off by default). Hover a page in the tree to see a larger version of its cover.
 
 ### Settings
 
@@ -58,9 +87,9 @@ It works in other Chromium browsers (Edge, Brave, Arc) the same way.
 
 ## Privacy and safety
 
-- **No writes to your worlds.** The extension never creates, edits or deletes LegendKeeper content. Where it drives the app (the sidebar filter, page navigation), it calls LegendKeeper's own functions.
-- **No network requests of its own.** Cover thumbnails reuse the image URLs LegendKeeper already loads.
-- **Local storage only.** Tag pins, recent pages and cached cover URLs are kept in your browser's `localStorage` under keys starting with `lkt:`. Settings go in `chrome.storage.sync`.
+- **Writes only when you confirm.** The only feature that changes world data is **Set for subpages**. It runs only after you review the dialog and click Apply, and only through the same functions LegendKeeper's page menu uses. Nothing else creates, edits or deletes content. The sidebar filter and page navigation are driven through LegendKeeper's own functions.
+- **Read-only lookups.** "Load covers for all pages" and "Set for subpages" read page details through LegendKeeper's own batch loader. The extension doesn't talk to any other server.
+- **Local storage only.** Tabs, tag pins, the saved tag filter, recent pages and cached cover URLs are kept in your browser's `localStorage` under keys starting with `lkt:`. Settings go in `chrome.storage.sync`.
 - **Fails safe.** If a LegendKeeper update changes the code the extension hooks into, that tweak switches itself off and LegendKeeper carries on normally.
 
 To reset everything for a project, run this in DevTools on a LegendKeeper tab:
@@ -73,13 +102,15 @@ Object.keys(localStorage).filter((k) => k.startsWith("lkt:")).forEach((k) => loc
 
 LegendKeeper is a Next.js app bundled with Turbopack.
 
-- **Patching the sidebar.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes four small, regex-located edits to the sidebar's `ResourceBrowser` module:
+- **Patching the sidebar.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes five small, regex-located edits to the sidebar's `ResourceBrowser` module:
   - `nested-tag-filter`: before LegendKeeper builds its flat filtered list, hand the matches and the full tree to `__LKT.nestFilter`, which returns a pruned tree (matches plus their ancestors).
   - `expose-tag-filter`: passes the sidebar's tag-filter state and setter to the extension, so tag shortcuts drive the real filter.
   - `expose-entity-store`: passes LegendKeeper's client-side data store (read only), used for cover images, tag counts and page names.
-  - `expose-navigate`: passes the sidebar's navigate-to-page function, the same one LegendKeeper's shortcut bar uses.
+  - `expose-navigate`: passes the sidebar's navigate-to-page function, the same one LegendKeeper's shortcut bar uses (Recent pages, tabs).
+  - `expose-adapter`: passes LegendKeeper's data adapter, used to look up covers and page details, and by Set for subpages to call LegendKeeper's own update functions.
 - **Cover icons** are a generated stylesheet keyed on page ID (`<style id="lkt-covers">`). LegendKeeper's DOM, including the rich-text editor, is never modified for them.
 - **Everything else** is added on top of React. It finds LegendKeeper's elements through the `data-insp-path` source annotations LegendKeeper ships in production and the tree's `data-testid="resource-tree-item-<id>"` rows.
+- **`src/features/`** holds the larger features (`tabs.js`, `bulk-settings.js`, `page-extras.js`). They load after `page-hook.js` and plug into it through `window.__LKT.util` and `__LKT.onRender()`.
 - **`src/bridge.js`** runs in the extension's isolated world and copies settings from `chrome.storage.sync` onto `<html data-lkt-settings>` for the page script.
 - **`src/settings-button.js`** adds the top-bar button, which opens `popup/popup.html` in a popover themed to match LegendKeeper.
 
@@ -98,7 +129,11 @@ Run `window.__LKT.patches` in DevTools to see the status of each patch (`applied
 ```
 manifest.json                 Chrome extension manifest (MV3)
 src/
-  page-hook.js                Page-world script: Turbopack patches and all tweaks
+  page-hook.js                Page-world script: Turbopack patches, core tweaks, shared helpers
+  features/
+    tabs.js                   Page tabs
+    bulk-settings.js          Right-click menu items and the Set for subpages dialog
+    page-extras.js            Cover hover preview, reading time
   bridge.js                   Isolated world: settings bridge
   settings-button.js          Isolated world: top-bar settings button and popover
   tweaks.css                  Styles for injected UI

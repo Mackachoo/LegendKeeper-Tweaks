@@ -10,6 +10,13 @@
     coverIconsUseBanner: false,
     recentPages: true,
     slashToFilter: true,
+    keepTagFilter: true,
+    coverHoverPreview: false,
+    coverPrefetch: true,
+    readingTime: true,
+    tabs: true,
+    tabsMiddleClick: true,
+    bulkSettings: true,
   };
 
   function publish(settings) {

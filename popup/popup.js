@@ -7,6 +7,13 @@ const DEFAULTS = {
   coverIconsUseBanner: false,
   recentPages: true,
   slashToFilter: true,
+  keepTagFilter: true,
+  coverHoverPreview: false,
+  coverPrefetch: true,
+  readingTime: true,
+  tabs: true,
+  tabsMiddleClick: true,
+  bulkSettings: true,
 };
 
 document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
