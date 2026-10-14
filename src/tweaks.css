@@ -1,0 +1,189 @@
+/* LegendKeeper Tweaks. Colours lean on LegendKeeper's own CSS variables where possible.
+   Cover-image icons are generated at runtime as a separate stylesheet (#lkt-covers). */
+
+.lkt-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.lkt-row[hidden] {
+  display: none;
+}
+/* The filter area is a flex column; keep LegendKeeper's own pills and shortcut bar first,
+   whatever order React inserts them in. */
+.lkt-tag-shortcuts {
+  order: 10;
+}
+.lkt-recent {
+  order: 11;
+}
+.lkt-row-label {
+  width: 100%;
+  padding: 2px 2px 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground, 0 0% 60%) / 0.7);
+}
+
+.lkt-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  max-width: 100%;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.03);
+  color: hsl(var(--muted-foreground, 0 0% 60%));
+  font-size: 0.8125rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms;
+}
+.lkt-chip:hover {
+  background: hsl(var(--muted, 0 0% 20%));
+  color: hsl(var(--foreground, 0 0% 95%));
+}
+.lkt-chip > i {
+  flex: none;
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+.lkt-chip .lkt-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tag shortcuts */
+.lkt-tag-shortcut.lkt-active {
+  background: hsl(var(--accent, 0 0% 25%));
+  color: hsl(var(--foreground, 0 0% 95%));
+  box-shadow: inset 0 0 0 1px hsl(var(--primary, 0 0% 80%) / 0.5);
+}
+.lkt-tag-shortcut .lkt-count {
+  flex: none;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+.lkt-tag-shortcut .lkt-remove {
+  display: none;
+  flex: none;
+  margin-right: -4px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 999px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+.lkt-tag-shortcut:hover .lkt-remove {
+  display: inline-block;
+}
+.lkt-tag-shortcut:hover .lkt-count {
+  display: none;
+}
+.lkt-tag-shortcut .lkt-remove:hover {
+  opacity: 1;
+  background: hsl(var(--foreground, 0 0% 95%) / 0.1);
+}
+
+/* Recent pages: one line, compact */
+.lkt-recent .lkt-chip {
+  height: 22px;
+  max-width: calc(50% - 2px);
+  padding: 0 7px;
+  font-size: 12px;
+}
+.lkt-recent-icon {
+  font-size: 0.7em;
+}
+
+.lkt-dropzone {
+  flex: 1;
+  height: 40px;
+}
+
+.lkt-drop-target {
+  outline: 1px dashed hsl(var(--primary, 0 0% 80%) / 0.6);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+[data-lkt-tag][draggable="true"] {
+  cursor: grab;
+}
+
+#lkt-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 12px);
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: hsl(var(--popover, 0 0% 12%));
+  color: hsl(var(--popover-foreground, 0 0% 95%));
+  border: 1px solid hsl(var(--border, 0 0% 25%));
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms, transform 150ms;
+  z-index: 2147483647;
+}
+#lkt-toast.lkt-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Settings button in LegendKeeper's top bar (next to Share) and its popover. */
+.lkt-settings-button {
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  margin-right: 4px;
+}
+.lkt-settings-button img {
+  display: block;
+  opacity: 0.85;
+  transition: opacity 120ms;
+}
+.lkt-settings-button:hover img,
+.lkt-settings-button[aria-expanded="true"] img {
+  opacity: 1;
+}
+.lkt-settings-panel {
+  position: fixed;
+  z-index: 2147483000;
+  display: flex;
+  width: 340px;
+  overflow: hidden;
+  border: 1px solid hsl(202 6% 17%);
+  border-radius: 0.5rem;
+  background: hsl(210 7% 11%);
+  box-shadow: 0 10px 38px -10px rgb(0 0 0 / 0.5), 0 10px 20px -15px rgb(0 0 0 / 0.4);
+  animation: lkt-pop 120ms ease-out;
+}
+.lkt-settings-panel[data-theme="light"] {
+  border-color: hsl(240 5.9% 90%);
+  background: #fff;
+}
+.lkt-settings-panel iframe {
+  flex: 1;
+  width: 100%;
+  height: 560px;
+  max-height: inherit;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+}
+@keyframes lkt-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LegendKeeper Tweaks</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="../icons/icon32.png" width="20" height="20" alt="" />
+      <h1>LegendKeeper Tweaks</h1>
+      <span class="version" id="version"></span>
+    </header>
+
+    <main>
+      <section>
+        <h2>Sidebar</h2>
+        <div class="group">
+          <label class="row">
+            <span class="text">
+              <span class="title">Tag shortcuts</span>
+              <span class="desc">Drag a tag into the sidebar filter area to pin it. Click a pinned tag to filter by it.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="tagShortcuts" />
+          </label>
+          <label class="row sub" data-parent="tagShortcuts">
+            <span class="text">
+              <span class="title">Show page counts</span>
+              <span class="desc">How many pages have each pinned tag.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="tagCounts" />
+          </label>
+          <label class="row">
+            <span class="text">
+              <span class="title">Keep tree when filtering</span>
+              <span class="desc">Matching pages stay nested in place. Parents shown only for nesting are greyed out.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="nestedTagFilter" />
+          </label>
+          <label class="row">
+            <span class="text">
+              <span class="title">Recent pages</span>
+              <span class="desc">Your last few pages in this project, under the filter box.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="recentPages" />
+          </label>
+          <label class="row">
+            <span class="text">
+              <span class="title">Quick filter key <kbd>/</kbd></span>
+              <span class="desc">Press <kbd>/</kbd> anywhere outside a text box to jump straight into the sidebar's “Find by name or #tag” box, ready to type.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="slashToFilter" />
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Cover images</h2>
+        <div class="group">
+          <label class="row">
+            <span class="text">
+              <span class="title">Covers as page icons</span>
+              <span class="desc">Swap a page's icon in the sidebar tree for a small square crop of its cover image.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="coverIcons" />
+          </label>
+          <label class="row sub" data-parent="coverIcons">
+            <span class="text">
+              <span class="title">Also in page content</span>
+              <span class="desc">@mention links, Backlinks and collection lists.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="coverIconsInBody" />
+          </label>
+          <label class="row sub" data-parent="coverIcons">
+            <span class="text">
+              <span class="title">Fall back to banner</span>
+              <span class="desc">Use the page banner when there's no cover image.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="coverIconsUseBanner" />
+          </label>
+        </div>
+      </section>
+    </main>
+
+    <footer>Covers appear once LegendKeeper has loaded a page (open or hover it once) and are remembered after that.</footer>
+    <script src="popup.js"></script>
+  </body>
+</html>
