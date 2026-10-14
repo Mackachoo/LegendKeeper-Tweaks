@@ -207,14 +207,14 @@ div:has(> .lkt-tabs) > :not(.lkt-tabs) {
 }
 /* LegendKeeper's sticky page header and page menu buttons are fixed under the top bar. */
 div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
-  margin-top: 32px;
+  margin-top: 33px;
 }
 .lkt-tabs {
   display: flex;
   flex: none;
   align-items: flex-end;
   gap: 2px;
-  height: 32px;
+  height: 33px;
   padding: 0 calc(var(--lkt-tabs-right, 0px) + 8px) 0 8px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -233,7 +233,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   min-width: 96px;
   max-width: 220px;
   /* 4px clear of the top bar; tab-shaped styles rest on the page. */
-  height: 28px;
+  height: 29px;
   padding: 0 6px 0 10px;
   border-radius: 8px 8px 0 0;
   color: #a1a1aa;
@@ -293,10 +293,11 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   color: #fafafa !important;
 }
 
-/* Pills (default): rounded chips centred in the bar, the same space above and below. */
+/* Pills (default): 4px above, 5px below (the extra pixel lengthens the bar underneath). */
 .lkt-tabstyle-pills {
   align-items: center;
   gap: 4px;
+  padding-bottom: 1px !important;
 }
 .lkt-tabstyle-pills .lkt-tab {
   height: 24px;
