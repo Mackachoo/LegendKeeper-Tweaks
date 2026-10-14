@@ -23,6 +23,7 @@
     suggestTab: false,
     blockHandleScale: 1,
     tabsFitWidth: true,
+    tabStyle: "filled",
   };
 
   function publish(settings) {

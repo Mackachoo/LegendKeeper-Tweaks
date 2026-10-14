@@ -59,6 +59,7 @@
     suggestTab: false,
     blockHandleScale: 1, // multiplier for content block drag handles
     tabsFitWidth: true,
+    tabStyle: "filled",
   };
   function settings() {
     try {

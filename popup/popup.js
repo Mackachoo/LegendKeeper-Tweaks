@@ -20,6 +20,7 @@ const DEFAULTS = {
   suggestTab: false,
   blockHandleScale: 1,
   tabsFitWidth: true,
+  tabStyle: "filled",
 };
 
 document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;

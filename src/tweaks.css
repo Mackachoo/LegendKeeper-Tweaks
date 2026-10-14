@@ -242,24 +242,75 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   user-select: none;
   transition: background-color 120ms, color 120ms;
 }
-/* Open tabs get a light fill and outline, so they read as tabs next to the faint suggested
-   and recent ones. The active tab joins the page and is bolder. */
-.lkt-tab:not(.lkt-tab-ghost) {
-  background: rgb(255 255 255 / 0.05);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
-  color: #c4c4c8;
-}
-.lkt-tab:not(.lkt-tab-ghost):hover {
-  background: rgb(255 255 255 / 0.09);
-  color: #e4e4e7;
-}
+/* Tab styles (Settings → Page tabs → Style). The active tab always joins the page and is bold;
+   suggested/recent tabs stay faint in every style. */
 .lkt-tab-active,
 .lkt-tab-active:hover {
   background: hsl(var(--background)) !important;
-  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.35) !important;
   color: hsl(var(--foreground)) !important;
   font-weight: 600;
 }
+
+/* Filled (default): open tabs have a soft grey fill, no border. */
+.lkt-tabstyle-filled .lkt-tab:not(.lkt-tab-ghost) {
+  background: rgb(255 255 255 / 0.06);
+  color: #c4c4c8;
+}
+.lkt-tabstyle-filled .lkt-tab:not(.lkt-tab-ghost):hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #e4e4e7;
+}
+
+/* Minimal: no fill; open tabs are simply brighter than the faint suggestions. */
+.lkt-tabstyle-minimal .lkt-tab:not(.lkt-tab-ghost) {
+  color: #d4d4d8;
+}
+.lkt-tabstyle-minimal .lkt-tab:not(.lkt-tab-ghost):hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+/* Underline: flat tabs; the active one is marked with a bar instead of joining the page. */
+.lkt-tabstyle-underline .lkt-tab {
+  border-radius: 6px 6px 0 0;
+}
+.lkt-tabstyle-underline .lkt-tab:not(.lkt-tab-ghost) {
+  color: #c4c4c8;
+}
+.lkt-tabstyle-underline .lkt-tab:not(.lkt-tab-ghost):hover {
+  background: rgb(255 255 255 / 0.06);
+}
+.lkt-tabstyle-underline .lkt-tab-active,
+.lkt-tabstyle-underline .lkt-tab-active:hover {
+  background: transparent !important;
+  box-shadow: inset 0 -2px 0 #e4e4e7;
+  color: #fafafa !important;
+}
+
+/* Pills: rounded chips floating in the bar. */
+.lkt-tabstyle-pills {
+  align-items: center;
+  gap: 4px;
+}
+.lkt-tabstyle-pills .lkt-tab {
+  height: 24px;
+  border-radius: 7px;
+}
+.lkt-tabstyle-pills .lkt-tab:not(.lkt-tab-ghost) {
+  background: rgb(255 255 255 / 0.07);
+  color: #c4c4c8;
+}
+.lkt-tabstyle-pills .lkt-tab:not(.lkt-tab-ghost):hover {
+  background: rgb(255 255 255 / 0.11);
+}
+.lkt-tabstyle-pills .lkt-tab-active,
+.lkt-tabstyle-pills .lkt-tab-active:hover {
+  background: rgb(255 255 255 / 0.18) !important;
+  color: #fafafa !important;
+}
+.lkt-tabstyle-pills .lkt-ghosts {
+  align-items: center;
+}
+
 .lkt-tab .lkt-ic,
 .lkt-recent .lkt-ic {
   display: inline-flex;
@@ -578,8 +629,9 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
 .lkt-tab-ghost .lkt-ic {
   opacity: 0.55;
 }
-.lkt-ghost-suggested .lkt-tab-label::before {
-  content: "✦ ";
+/* With both suggested and recent pages in the bar, mark the suggestions with a small ✦. */
+.lkt-ghosts-mixed .lkt-ghost-suggested .lkt-tab-label::after {
+  content: " ✦";
   opacity: 0.6;
 }
 .lkt-tab-ghost:hover {

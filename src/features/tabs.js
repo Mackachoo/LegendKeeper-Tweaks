@@ -138,6 +138,9 @@
     syncWithLocation();
     const el = ensureStrip(host);
     el.classList.toggle("lkt-tabs-fit", !!settings().tabsFitWidth);
+    const style = ["filled", "minimal", "underline", "pills"].includes(settings().tabStyle) ? settings().tabStyle : "filled";
+    for (const c of [...el.classList]) if (c.startsWith("lkt-tabstyle-") && c !== `lkt-tabstyle-${style}`) el.classList.remove(c);
+    el.classList.add(`lkt-tabstyle-${style}`);
     const state = load();
     const pid = projectId();
     const tabs = state.ids.map((id) => ({ id, r: getResource(id) })).filter(({ r }) => r && !r.deletedAt);
@@ -177,7 +180,8 @@
     }
     if (ghosts.length) {
       // Recent pages fill the rest of the bar as faint tabs; whatever doesn't fit is clipped.
-      const wrap = Object.assign(document.createElement("div"), { className: "lkt-ghosts" });
+      const mixed = ghosts.some((g) => g.kind === "suggested") && ghosts.some((g) => g.kind === "recent");
+      const wrap = Object.assign(document.createElement("div"), { className: "lkt-ghosts" + (mixed ? " lkt-ghosts-mixed" : "") });
       for (const { id, r, kind, reason } of ghosts) {
         const a = document.createElement("a");
         a.className = `lkt-tab lkt-tab-ghost lkt-ghost-${kind}`;
