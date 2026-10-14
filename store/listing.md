@@ -62,6 +62,11 @@ This is an unofficial, open-source project and isn't affiliated with or endorsed
 
 The store allows five screenshots, so drop one; I'd drop 4 or 2.
 
+**Promo tiles** (same folder, 24-bit PNG, no transparency):
+
+- Small promo tile (440×280): `promo-small.png`
+- Marquee promo tile (1400×560): `promo-marquee.png`
+
 **Homepage URL / Support URL:** https://github.com/Mackachoo/LegendKeeper-Tweaks
 
 ## Privacy practices tab
