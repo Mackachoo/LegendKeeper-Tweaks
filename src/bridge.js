@@ -23,7 +23,7 @@
     suggestTab: false,
     blockHandleScale: 1,
     tabsFitWidth: true,
-    tabStyle: "filled",
+    tabStyle: "pills",
   };
 
   function publish(settings) {

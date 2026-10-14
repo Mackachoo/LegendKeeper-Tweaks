@@ -251,7 +251,10 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   font-weight: 600;
 }
 
-/* Filled (default): open tabs have a soft grey fill, no border. */
+/* Filled: open tabs have a soft grey fill, no border. */
+.lkt-tabstyle-filled {
+  gap: 3px;
+}
 .lkt-tabstyle-filled .lkt-tab:not(.lkt-tab-ghost) {
   background: rgb(255 255 255 / 0.06);
   color: #c4c4c8;
@@ -269,24 +272,27 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   background: rgb(255 255 255 / 0.06);
 }
 
-/* Underline: flat tabs; the active one is marked with a bar instead of joining the page. */
-.lkt-tabstyle-underline .lkt-tab {
-  border-radius: 6px 6px 0 0;
+/* Underline: every open tab has the filled tab shape; the active one is marked with a bar
+   instead of joining the page. */
+.lkt-tabstyle-underline {
+  gap: 3px;
 }
 .lkt-tabstyle-underline .lkt-tab:not(.lkt-tab-ghost) {
+  background: rgb(255 255 255 / 0.06);
   color: #c4c4c8;
 }
 .lkt-tabstyle-underline .lkt-tab:not(.lkt-tab-ghost):hover {
-  background: rgb(255 255 255 / 0.06);
+  background: rgb(255 255 255 / 0.1);
+  color: #e4e4e7;
 }
 .lkt-tabstyle-underline .lkt-tab-active,
 .lkt-tabstyle-underline .lkt-tab-active:hover {
-  background: transparent !important;
+  background: rgb(255 255 255 / 0.1) !important;
   box-shadow: inset 0 -2px 0 #e4e4e7;
   color: #fafafa !important;
 }
 
-/* Pills: rounded chips floating in the bar. */
+/* Pills (default): rounded chips floating in the bar. */
 .lkt-tabstyle-pills {
   align-items: center;
   gap: 4px;
@@ -353,8 +359,23 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
 .lkt-tab-active .lkt-tab-close:hover {
   background: hsl(var(--foreground) / 0.1);
 }
-.lkt-tab-drop {
-  box-shadow: inset 2px 0 0 #a1a1aa;
+/* Drop slot while dragging a tab: a bar on each side of the gap. */
+.lkt-drop-before::before,
+.lkt-drop-after::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: #d4d4d8;
+  pointer-events: none;
+}
+.lkt-drop-before::before {
+  left: 0;
+}
+.lkt-drop-after::after {
+  right: 0;
 }
 
 /* Cover preview when hovering a page in the sidebar tree. */

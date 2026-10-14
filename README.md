@@ -17,11 +17,11 @@ This repo also holds two companion tools for working on LegendKeeper with Claude
 - Navigating normally changes the page in the current tab, like a browser.
 - **Middle-click** any page link (Project Browser, @mentions, backlinks…) to open it in a new tab, or right-click a page in the tree and choose **Open in new tab**.
 - Opening a page that's already in a tab switches to that tab.
-- Close a tab with **×** or a middle-click. Drag tabs to reorder them.
-- **Style**: Filled (default), Minimal, Underline or Pills. In every style the active tab is bold, and suggested and recent pages stay faint.
+- Close a tab with **×** or a middle-click. Drag tabs to reorder them; a bar on each side of the gap shows where it will land.
+- **Style**: Pills (default), Filled, Minimal or Underline. In every style the active tab is bold, and suggested and recent pages stay faint.
 - Tabs are remembered per project, so they survive a reload.
 - **Adaptive width** (on by default): each tab fits its name, up to the standard width; longer names end in "…".
-- Optionally, suggested and/or recent pages fill the rest of the bar as faint tabs; click one to open it as a real tab. Suggestions follow the active tab's page. When both are in the bar, suggestions come first and are marked with a ✦ after the name.
+- Optionally, suggested and/or recent pages fill the rest of the bar as faint tabs; click one to open it as a real tab at the end of the bar. Suggestions follow the active tab's page. When both are in the bar, suggestions come first and are marked with a ✦ after the name.
 
 ### Pages
 

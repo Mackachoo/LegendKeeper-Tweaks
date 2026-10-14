@@ -59,7 +59,7 @@
     suggestTab: false,
     blockHandleScale: 1, // multiplier for content block drag handles
     tabsFitWidth: true,
-    tabStyle: "filled",
+    tabStyle: "pills",
   };
   function settings() {
     try {

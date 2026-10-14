@@ -48,14 +48,19 @@
   }
 
   // Like Chrome: background tabs opened from the same page line up in order after it.
+  // Suggested/recent tabs (atEnd) always go at the end of the bar instead.
   let lastOpened = { from: null, id: null };
-  function openInNewTab(rid) {
+  function openInNewTab(rid, { atEnd = false } = {}) {
     const state = load();
     if (state.ids.includes(rid)) return;
-    const after = lastOpened.from === state.active && state.ids.includes(lastOpened.id) ? lastOpened.id : state.active;
-    const i = state.ids.indexOf(after);
-    state.ids.splice(i >= 0 ? i + 1 : state.ids.length, 0, rid);
-    lastOpened = { from: state.active, id: rid };
+    if (atEnd) {
+      state.ids.push(rid);
+    } else {
+      const after = lastOpened.from === state.active && state.ids.includes(lastOpened.id) ? lastOpened.id : state.active;
+      const i = state.ids.indexOf(after);
+      state.ids.splice(i >= 0 ? i + 1 : state.ids.length, 0, rid);
+      lastOpened = { from: state.active, id: rid };
+    }
     if (state.ids.length > MAX_TABS) state.ids = state.ids.slice(0, MAX_TABS);
     save(state);
     LKT.render();
@@ -120,7 +125,10 @@
       strip.addEventListener("dragstart", onDragStart);
       strip.addEventListener("dragover", onDragOver);
       strip.addEventListener("drop", onDrop);
-      strip.addEventListener("dragend", () => strip.querySelectorAll(".lkt-tab-drop").forEach((t) => t.classList.remove("lkt-tab-drop")));
+      strip.addEventListener("dragend", () => {
+        dragging = null;
+        clearDropMarks();
+      });
     }
     if (host.firstElementChild !== strip) host.prepend(strip);
     const inset = `${Math.round(rightInset())}px`;
@@ -138,7 +146,7 @@
     syncWithLocation();
     const el = ensureStrip(host);
     el.classList.toggle("lkt-tabs-fit", !!settings().tabsFitWidth);
-    const style = ["filled", "minimal", "underline", "pills"].includes(settings().tabStyle) ? settings().tabStyle : "filled";
+    const style = ["filled", "minimal", "underline", "pills"].includes(settings().tabStyle) ? settings().tabStyle : "pills";
     for (const c of [...el.classList]) if (c.startsWith("lkt-tabstyle-") && c !== `lkt-tabstyle-${style}`) el.classList.remove(c);
     el.classList.add(`lkt-tabstyle-${style}`);
     const state = load();
@@ -217,7 +225,7 @@
     if (ghost && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
       // Open the suggestion as a real tab and switch to it.
       e.preventDefault();
-      openInNewTab(ghost.dataset.lktGhost);
+      openInNewTab(ghost.dataset.lktGhost, { atEnd: true });
       navigateToResource(ghost.dataset.lktGhost);
       return;
     }
@@ -230,7 +238,7 @@
     const ghost = e.button === 1 && e.target.closest("[data-lkt-ghost]");
     if (ghost) {
       e.preventDefault();
-      openInNewTab(ghost.dataset.lktGhost);
+      openInNewTab(ghost.dataset.lktGhost, { atEnd: true });
       return;
     }
     const tab = e.button === 1 && e.target.closest("[data-lkt-tab]");
@@ -238,24 +246,51 @@
     e.preventDefault();
     closeTab(tab.dataset.lktTab);
   }
+  // Dragging tabs: the drop slot is the gap nearest the pointer (left or right half of a tab).
+  // It's marked on both sides: the right edge of the tab before it and the left edge of the tab
+  // after it.
+  let dragging = null;
   function onDragStart(e) {
     const tab = e.target.closest("[data-lkt-tab]");
     if (!tab) return;
-    e.dataTransfer.setData("application/x-lkt-tab", tab.dataset.lktTab);
+    dragging = tab.dataset.lktTab;
+    e.dataTransfer.setData("application/x-lkt-tab", dragging);
     e.dataTransfer.effectAllowed = "move";
+  }
+  function clearDropMarks() {
+    strip?.querySelectorAll(".lkt-drop-before, .lkt-drop-after").forEach((t) => t.classList.remove("lkt-drop-before", "lkt-drop-after"));
+  }
+  function dropSlot(e) {
+    const tabs = [...strip.querySelectorAll("[data-lkt-tab]")];
+    let idx = tabs.length;
+    for (let i = 0; i < tabs.length; i++) {
+      const r = tabs[i].getBoundingClientRect();
+      if (e.clientX < r.left + r.width / 2) {
+        idx = i;
+        break;
+      }
+    }
+    const from = tabs.findIndex((t) => t.dataset.lktTab === dragging);
+    const noop = from >= 0 && (idx === from || idx === from + 1);
+    return { tabs, idx, noop };
   }
   function onDragOver(e) {
     if (![...e.dataTransfer.types].includes("application/x-lkt-tab")) return;
     e.preventDefault();
-    strip.querySelectorAll(".lkt-tab-drop").forEach((t) => t.classList.remove("lkt-tab-drop"));
-    e.target.closest("[data-lkt-tab]")?.classList.add("lkt-tab-drop");
+    clearDropMarks();
+    const { tabs, idx, noop } = dropSlot(e);
+    if (noop) return;
+    if (idx < tabs.length) tabs[idx].classList.add("lkt-drop-before");
+    if (idx > 0) tabs[idx - 1].classList.add("lkt-drop-after");
   }
   function onDrop(e) {
     const rid = e.dataTransfer.getData("application/x-lkt-tab");
     if (!rid) return;
     e.preventDefault();
-    const over = e.target.closest("[data-lkt-tab]");
-    moveTab(rid, over && over.dataset.lktTab !== rid ? over.dataset.lktTab : null);
+    const { tabs, idx, noop } = dropSlot(e);
+    clearDropMarks();
+    if (noop) return;
+    moveTab(rid, idx < tabs.length ? tabs[idx].dataset.lktTab : null);
   }
 
   // --- middle-click a page link anywhere → new tab ------------------------------------------
