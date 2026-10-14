@@ -1,0 +1,24 @@
+services:
+  legendkeeper-mcp:
+    build: .
+    container_name: legendkeeper-mcp
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MCP_TRANSPORT: http
+      PORT: 8787
+    ports:
+      - "127.0.0.1:8787:8787" # local only; expose publicly through the tunnel below
+
+  # Optional: a Cloudflare Tunnel gives the server a public HTTPS address without opening
+  # ports on your router. Create a tunnel in the Cloudflare dashboard, route a hostname
+  # (e.g. lk-mcp.example.com) to http://legendkeeper-mcp:8787, and put its token in .env.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - legendkeeper-mcp
+    profiles: ["tunnel"]
