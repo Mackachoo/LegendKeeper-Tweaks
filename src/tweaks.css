@@ -15,8 +15,11 @@
 .lkt-tag-shortcuts {
   order: 10;
 }
-.lkt-recent {
+.lkt-suggested {
   order: 11;
+}
+.lkt-recent {
+  order: 12;
 }
 .lkt-row-label {
   width: 100%;
@@ -566,41 +569,45 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
 .lkt-tab-ghost .lkt-ic {
   opacity: 0.55;
 }
+.lkt-ghost-suggested .lkt-tab-label::before {
+  content: "✦ ";
+  opacity: 0.6;
+}
 .lkt-tab-ghost:hover {
   background: rgb(255 255 255 / 0.04);
   color: #d4d4d8;
   opacity: 1;
 }
 
-/* Recent pages at the bottom of the Project Browser. */
-.lkt-recent.lkt-recent-bottom {
+/* Recent / Suggested rows at the bottom of the Project Browser. */
+.lkt-row.lkt-row-bottom {
   flex: none;
   padding: 8px 8px 6px;
   border-top: 1px solid hsl(var(--border));
 }
 
-/* "Recents" tab in the Project Browser. While it's open, hide LegendKeeper's tab panels and
-   dim its active tab. */
-div:has(> .lkt-recents-panel:not([hidden])) > [role="tabpanel"] {
+/* Recents / Suggested tabs in the Project Browser. While one is open, hide LegendKeeper's tab
+   panels and dim its active tab. */
+div:has(> .lkt-browser-panel:not([hidden])) > [role="tabpanel"] {
   display: none !important;
 }
-[role="tablist"]:has(> .lkt-recents-trigger[data-state="active"]) > [role="tab"][data-state="active"]:not(.lkt-recents-trigger) {
+[role="tablist"]:has(> .lkt-browser-trigger[data-state="active"]) > [role="tab"][data-state="active"]:not(.lkt-browser-trigger) {
   color: hsl(var(--muted-foreground));
 }
-.lkt-recents-trigger[data-state="active"] {
+.lkt-browser-trigger[data-state="active"] {
   color: hsl(var(--primary));
 }
-.lkt-recents-panel {
+.lkt-browser-panel {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
   padding: 4px 8px 8px;
 }
-.lkt-recents-panel[hidden] {
+.lkt-browser-panel[hidden] {
   display: none;
 }
-.lkt-recents-head {
+.lkt-browser-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -611,7 +618,7 @@ div:has(> .lkt-recents-panel:not([hidden])) > [role="tabpanel"] {
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.lkt-recents-clear {
+.lkt-browser-clear {
   padding: 2px 6px;
   border-radius: 6px;
   background: none;
@@ -621,17 +628,17 @@ div:has(> .lkt-recents-panel:not([hidden])) > [role="tabpanel"] {
   text-transform: inherit;
   cursor: pointer;
 }
-.lkt-recents-clear:hover {
+.lkt-browser-clear:hover {
   background: hsl(var(--foreground) / 0.08);
   color: hsl(var(--foreground));
 }
-.lkt-recents-list {
+.lkt-browser-list {
   display: flex;
   flex-direction: column;
   gap: 1px;
   overflow-y: auto;
 }
-.lkt-recents-item {
+.lkt-browser-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -640,11 +647,11 @@ div:has(> .lkt-recents-panel:not([hidden])) > [role="tabpanel"] {
   color: hsl(var(--foreground) / 0.8);
   text-decoration: none;
 }
-.lkt-recents-item:hover {
+.lkt-browser-item:hover {
   background: hsl(var(--foreground) / 0.07);
   color: hsl(var(--foreground));
 }
-.lkt-recents-item .lkt-ic {
+.lkt-browser-item .lkt-ic {
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -653,25 +660,25 @@ div:has(> .lkt-recents-panel:not([hidden])) > [role="tabpanel"] {
   height: 18px;
   font-size: 12px;
 }
-.lkt-recents-text {
+.lkt-browser-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.lkt-recents-name,
-.lkt-recents-path {
+.lkt-browser-name,
+.lkt-browser-sub {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.lkt-recents-name {
+.lkt-browser-name {
   font-size: 13px;
 }
-.lkt-recents-path {
+.lkt-browser-sub {
   color: hsl(var(--muted-foreground));
   font-size: 11.5px;
 }
-.lkt-recents-empty {
+.lkt-browser-empty {
   margin: 4px 8px;
   color: hsl(var(--muted-foreground));
   font-size: 12.5px;

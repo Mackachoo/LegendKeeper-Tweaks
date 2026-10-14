@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LegendKeeper Tweaks",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Quality-of-life tweaks for LegendKeeper: tag shortcuts, tree-preserving filtering, cover-image icons and more.",
   "icons": {
     "16": "icons/icon16.png",
@@ -30,10 +30,11 @@
       ],
       "js": [
         "src/page-hook.js",
+        "src/features/suggestions.js",
         "src/features/tabs.js",
         "src/features/page-extras.js",
         "src/features/bulk-settings.js",
-        "src/features/recents-tab.js"
+        "src/features/browser-tabs.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"

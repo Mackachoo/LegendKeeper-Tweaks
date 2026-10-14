@@ -140,12 +140,16 @@
     const state = load();
     const pid = projectId();
     const tabs = state.ids.map((id) => ({ id, r: getResource(id) })).filter(({ r }) => r && !r.deletedAt);
-    const s = settings();
-    const ghosts =
-      s.recentPages && s.recentPlacement === "tabs"
-        ? recentPages(12).filter(({ id }) => !state.ids.includes(id))
-        : [];
-    const sig = JSON.stringify([pid, state.active, tabs.map(({ id, r }) => [id, r.name, r.iconGlyph, r.iconColor]), ghosts.map(({ id, r }) => [id, r.name])]);
+    // Suggested, then recent pages, as faint tabs after the open ones (whichever are set to
+    // "In tab bar"). Suggestions follow the active tab's page.
+    const ghosts = [];
+    const seen = new Set(state.ids);
+    const addGhosts = (kind, list) => {
+      for (const g of list) if (!seen.has(g.id)) seen.add(g.id), ghosts.push({ ...g, kind });
+    };
+    if (LKT.placementOf?.("suggested") === "tabs" && LKT.util.suggestedPages) addGhosts("suggested", LKT.util.suggestedPages(10));
+    if (LKT.placementOf?.("recent") === "tabs") addGhosts("recent", recentPages(12));
+    const sig = JSON.stringify([pid, state.active, tabs.map(({ id, r }) => [id, r.name, r.iconGlyph, r.iconColor]), ghosts.map(({ id, r, kind }) => [id, r.name, kind])]);
     if (el.dataset.sig === sig) return;
     el.dataset.sig = sig;
     el.replaceChildren();
@@ -173,13 +177,12 @@
     if (ghosts.length) {
       // Recent pages fill the rest of the bar as faint tabs; whatever doesn't fit is clipped.
       const wrap = Object.assign(document.createElement("div"), { className: "lkt-ghosts" });
-      wrap.title = "Recent pages";
-      for (const { id, r } of ghosts) {
+      for (const { id, r, kind, reason } of ghosts) {
         const a = document.createElement("a");
-        a.className = "lkt-tab lkt-tab-ghost";
+        a.className = `lkt-tab lkt-tab-ghost lkt-ghost-${kind}`;
         a.href = `/a/${pid}/${id}`;
         a.dataset.lktGhost = id;
-        a.title = `${r.name} (recent)`;
+        a.title = kind === "suggested" ? `${r.name} — suggested${reason ? `: ${reason}` : ""}` : `${r.name} — recent`;
         const icon = document.createElement("i");
         icon.className = "lkt-ic " + glyphClass(r.iconGlyph);
         a.append(icon, Object.assign(document.createElement("span"), { className: "lkt-tab-label", textContent: r.name }));

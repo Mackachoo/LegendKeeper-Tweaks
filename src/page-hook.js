@@ -4,8 +4,9 @@
 // Turbopack chunks before they execute and rewrite a few module factories:
 //
 //   1. nested-tag-filter: when a tag/name filter is active, LegendKeeper normally flattens the
-//      sidebar tree into an alphabetical list. We rebuild a pruned tree instead, keeping the
-//      ancestors needed for nesting and greying them out.
+//      Project Browser tree into an alphabetical list. We rebuild a pruned tree instead, keeping
+//      the ancestors needed for nesting and greying them out. (nested-filter-expand keeps your
+//      folder open/closed state working while that filter is on.)
 //   2. expose-tag-filter: hands us the sidebar's tag-filter state + setter so tag shortcuts can
 //      drive it.
 //   3. expose-entity-store: hands us LegendKeeper's client-side entity store (read only), used
@@ -52,8 +53,10 @@
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
-    recentPlacement: "filter", // "filter" | "bottom" | "tabs"
+    recentPlacement: "filter", // "off" | "filter" | "bottom" | "tabs"
     recentTab: false,
+    suggestPlacement: "filter", // "off" | "filter" | "bottom" | "tabs"
+    suggestTab: false,
     blockHandleSize: 1, // 0 small, 1 standard, 2 large, 3 larger
   };
   function settings() {
@@ -82,6 +85,15 @@
           `if(!${isFiltering})`,
           `{const __lkt=window.__LKT&&window.__LKT.nestFilter(${isFiltering}?${matches}:null,${baseTree});if(__lkt)return __lkt;}if(!${isFiltering})`,
         ),
+    },
+    {
+      name: "nested-filter-expand",
+      gate: "lk:tree-filter-rule",
+      // expandStates:te?void 0:e1 — while filtering LegendKeeper drops your expand state, so every
+      // folder is forced open and can't be collapsed. With the nested filter on, keep it.
+      re: /expandStates:(\w+)\?void 0:(\w+)/,
+      replace: (m, isFiltering, expandStates) =>
+        `expandStates:${isFiltering}&&!(window.__LKT&&window.__LKT.nestActive)?void 0:${expandStates}`,
     },
     {
       name: "expose-tag-filter",
@@ -297,11 +309,14 @@
   // matches: ordered ids that passed LegendKeeper's own name/tag filter, or null when not filtering.
   // base:    LegendKeeper's normal tree ({ rootId, items: { [id]: { id, parentId, children, ... } } }).
   // Returns a replacement tree, or null to let LegendKeeper do its default.
+  LKT.nestActive = false;
   LKT.nestFilter = (matches, base) => {
+    LKT.nestActive = false;
     if (!matches || !settings().nestedTagFilter || !base || !base.items) {
       setDimmed([]);
       return null;
     }
+    LKT.nestActive = true;
     const items = base.items;
     const matched = new Set(matches);
     const keep = new Set();
@@ -329,7 +344,8 @@
       if (out[id]) return;
       const src = items[id] || { id, children: [], isHidden: false };
       const kids = (src.children || []).filter((k) => keep.has(k));
-      out[id] = { ...src, children: kids, hasChildren: kids.length > 0, isExpanded: kids.length > 0 };
+      // Folders keep whatever open/closed state you had; chevrons work as normal.
+      out[id] = { ...src, children: kids, hasChildren: kids.length > 0, isExpanded: kids.length > 0 && !!src.isExpanded };
       kids.forEach(visit);
     };
     rootChildren.forEach(visit);
@@ -707,26 +723,37 @@
       .slice(0, limit);
   }
 
-  // Where the Recent row goes: under the filter box ("filter"), at the bottom of the Project
-  // Browser ("bottom"), or as suggested tabs in the tab bar ("tabs", drawn by features/tabs.js).
-  function renderRecent(area) {
+  // Recent and Suggested rows. Each goes under the filter box ("filter"), at the bottom of the
+  // Project Browser ("bottom"), in the tab bar ("tabs", drawn by features/tabs.js) or nowhere.
+  const PAGE_ROWS = {
+    recent: { setting: "recentPlacement", label: "Recent", items: () => recentPages(6) },
+    suggested: { setting: "suggestPlacement", label: "Suggested", items: () => (LKT.util.suggestedPages ? LKT.util.suggestedPages(6) : []) },
+  };
+  function placementOf(kind) {
     const s = settings();
-    const placement = s.recentPlacement === "bottom" || (s.recentPlacement === "tabs" && s.tabs) ? s.recentPlacement : "filter";
-    if (!s.recentPages || placement === "tabs") return hideRow("recent");
+    const v = s[PAGE_ROWS[kind].setting];
+    if (v === "tabs" && !s.tabs) return "filter";
+    return ["off", "filter", "bottom", "tabs"].includes(v) ? v : "filter";
+  }
+  LKT.placementOf = placementOf;
+
+  function renderPageRow(kind, area) {
+    const placement = placementOf(kind);
+    if (placement === "off" || placement === "tabs") return hideRow(kind);
     const pid = projectId();
-    const items = recentPages(6);
+    const items = PAGE_ROWS[kind].items();
     const host = placement === "bottom" ? area.parentElement : area;
-    const row = ownRow("recent", host);
-    row.classList.toggle("lkt-recent-bottom", placement === "bottom");
+    const row = ownRow(kind, host);
+    row.classList.toggle("lkt-row-bottom", placement === "bottom");
     row.hidden = !items.length;
-    const sig = JSON.stringify(items.map(({ id, r }) => [id, r.name, r.iconGlyph]));
+    const sig = JSON.stringify(items.map(({ id, r, reason }) => [id, r.name, r.iconGlyph, reason]));
     setRowContent(row, sig, (row) => {
-      row.appendChild(Object.assign(document.createElement("span"), { className: "lkt-row-label", textContent: "Recent" }));
-      for (const { id, r } of items) {
+      row.appendChild(Object.assign(document.createElement("span"), { className: "lkt-row-label", textContent: PAGE_ROWS[kind].label }));
+      for (const { id, r, reason } of items) {
         const a = document.createElement("a");
         a.className = "lkt-chip lkt-recent-link";
         a.href = `/a/${pid}/${id}`;
-        a.title = r.name;
+        a.title = reason ? `${r.name} — ${reason}` : r.name;
         a.dataset.lktNav = id;
         const icon = document.createElement("i");
         icon.className = "lkt-ic lkt-recent-icon " + glyphClass(r.iconGlyph);
@@ -915,7 +942,8 @@
     if (area) {
       markTagSources(area);
       renderTagShortcuts(area);
-      renderRecent(area);
+      renderPageRow("suggested", area);
+      renderPageRow("recent", area);
     }
     // Content block handle size (CSS in tweaks.css keys off this attribute).
     const handle = String(settings().blockHandleSize ?? 1);

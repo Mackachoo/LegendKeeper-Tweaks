@@ -19,6 +19,8 @@
     bulkSettings: true,
     recentPlacement: "filter",
     recentTab: false,
+    suggestPlacement: "filter",
+    suggestTab: false,
     blockHandleSize: 1,
   };
 
@@ -28,7 +30,14 @@
   }
 
   document.documentElement.dataset.lktVersion = chrome.runtime.getManifest().version;
-  chrome.storage.sync.get(DEFAULTS, publish);
+  chrome.storage.sync.get(DEFAULTS, (settings) => {
+    // 0.6.0: the old Recent pages on/off switch became a "Don't show" placement.
+    if (settings.recentPages === false) {
+      chrome.storage.sync.set({ recentPages: true, recentPlacement: "off" });
+      return;
+    }
+    publish(settings);
+  });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync") return;
     chrome.storage.sync.get(DEFAULTS, publish);

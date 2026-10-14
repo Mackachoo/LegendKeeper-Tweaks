@@ -16,6 +16,8 @@ const DEFAULTS = {
   bulkSettings: true,
   recentPlacement: "filter",
   recentTab: false,
+  suggestPlacement: "filter",
+  suggestTab: false,
   blockHandleSize: 1,
 };
 
@@ -34,16 +36,17 @@ if (params.has("embedded")) {
   });
 }
 
-const inputs = [...document.querySelectorAll("input[data-key]")];
+const inputs = [...document.querySelectorAll("input[data-key], select[data-key]")];
 
 function readInput(input) {
   if (input.type === "checkbox") return input.checked;
   if (input.type === "range") return Number(input.value);
-  return input.value; // radio
+  return input.value; // radio, select
 }
 function writeInput(input, value) {
   if (input.type === "checkbox") input.checked = !!value;
   else if (input.type === "range") input.value = String(value);
+  else if (input.tagName === "SELECT") input.value = value;
   else input.checked = input.value === value;
 }
 
@@ -54,7 +57,8 @@ function syncDependents() {
   }
   for (const hint of document.querySelectorAll("[data-show-when]")) {
     const [key, value] = hint.dataset.showWhen.split("=");
-    hint.hidden = document.querySelector(`input[data-key="${key}"]:checked`)?.value !== value;
+    const control = document.querySelector(`select[data-key="${key}"]`) || document.querySelector(`input[data-key="${key}"]:checked`);
+    hint.hidden = control?.value !== value;
   }
 }
 

@@ -51,37 +51,53 @@
         </div>
 
         <div class="card">
-          <label class="row">
+          <div class="row">
             <span class="text">
               <span class="title">Recent pages</span>
-              <span class="desc">Quick links to the last pages you opened in this project.</span>
+              <span class="desc">The last pages you opened in this project.</span>
             </span>
-            <input type="checkbox" role="switch" data-key="recentPages" />
-          </label>
-          <div class="subs" data-parent="recentPages">
-            <div class="row stacked">
-              <span class="text"><span class="title">Show them</span></span>
-              <div class="seg" role="radiogroup" aria-label="Where recent pages appear">
-                <input type="radio" name="recentPlacement" id="rp-filter" value="filter" data-key="recentPlacement" />
-                <label for="rp-filter">Under filter</label>
-                <input type="radio" name="recentPlacement" id="rp-bottom" value="bottom" data-key="recentPlacement" />
-                <label for="rp-bottom">At bottom</label>
-                <input type="radio" name="recentPlacement" id="rp-tabs" value="tabs" data-key="recentPlacement" />
-                <label for="rp-tabs">In tab bar</label>
-              </div>
-              <span class="desc hint" data-show-when="recentPlacement=tabs">Shown as faint tabs after your open ones; click one to open it. Needs Page tabs on.</span>
-            </div>
+            <select class="select" data-key="recentPlacement" aria-label="Where recent pages appear">
+                <option value="off">Don't show</option>
+                <option value="filter">Under filter</option>
+                <option value="bottom">At bottom of Project Browser</option>
+                <option value="tabs">In tab bar</option>
+            </select>
+          </div>
+          <div class="subs">
+            <label class="row">
+              <span class="text">
+                <span class="title">Show as a tab</span>
+                <span class="desc">Adds Recents next to Project, Templates and Assets.</span>
+              </span>
+              <input type="checkbox" role="switch" data-key="recentTab" />
+            </label>
+            <span class="desc hint row" data-show-when="recentPlacement=tabs">Shown as faint tabs after your open ones; click one to open it. Needs Page tabs on.</span>
           </div>
         </div>
 
         <div class="card">
-          <label class="row">
+          <div class="row">
             <span class="text">
-              <span class="title">Recents tab</span>
-              <span class="desc">Adds a Recents tab next to Project, Templates and Assets with your full history.</span>
+              <span class="title">Suggested pages</span>
+              <span class="desc">Pages you'll probably want next, learned from how you use the project.</span>
             </span>
-            <input type="checkbox" role="switch" data-key="recentTab" />
-          </label>
+            <select class="select" data-key="suggestPlacement" aria-label="Where suggested pages appear">
+                <option value="off">Don't show</option>
+                <option value="filter">Under filter</option>
+                <option value="bottom">At bottom of Project Browser</option>
+                <option value="tabs">In tab bar</option>
+            </select>
+          </div>
+          <div class="subs">
+            <label class="row">
+              <span class="text">
+                <span class="title">Show as a tab</span>
+                <span class="desc">Adds Suggested next to Project, Templates and Assets.</span>
+              </span>
+              <input type="checkbox" role="switch" data-key="suggestTab" />
+            </label>
+            <span class="desc hint row" data-show-when="suggestPlacement=tabs">Shown as faint ✦ tabs after your open ones, before recents. They change with the active tab.</span>
+          </div>
         </div>
 
         <div class="card">

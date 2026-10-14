@@ -19,7 +19,7 @@ This repo also holds two companion tools for working on LegendKeeper with Claude
 - Opening a page that's already in a tab switches to that tab.
 - Close a tab with **×** or a middle-click. Drag tabs to reorder them.
 - Tabs are remembered per project, so they survive a reload.
-- Optionally, your recent pages fill the rest of the bar as faint suggested tabs; click one to open it as a real tab (see Recent pages).
+- Optionally, suggested and/or recent pages fill the rest of the bar as faint tabs (suggested ones marked ✦); click one to open it as a real tab. Suggestions follow the active tab's page.
 
 ### Pages
 
@@ -56,13 +56,21 @@ LegendKeeper's left-hand panel (Project / Templates / Assets). "Sidebar" in Lege
 
 Pins are saved per project, in this browser only.
 
-**Keep tree when filtering.** Normally, filtering by tag or name flattens the Project Browser into an alphabetical list. With this on, matching pages stay where they are in the hierarchy. The parent pages needed to reach them are shown greyed out, and you can still click them.
+**Keep tree when filtering.** Normally, filtering by tag or name flattens the Project Browser into an alphabetical list. With this on, matching pages stay where they are in the hierarchy. The parent pages needed to reach them are shown greyed out, and you can still click them. Folders keep the open/closed state you had, and you can open and close them as normal while filtering; a greyed-out folder means there are matches inside.
 
 **Keep tag filter after reload.** The tags you've filtered by stay selected when you reload or come back to the project.
 
-**Recent pages.** The last few pages you opened in this project. Choose where they appear: under the filter box, at the bottom of the Project Browser, or in the tab bar as faint suggested tabs.
+**Recent pages** and **Suggested pages.** Each has its own setting for where it appears: don't show, under the filter box, at the bottom of the Project Browser, or in the tab bar as faint tabs. Each can also be shown as its own tab next to Project, Templates and Assets (**Show as a tab**, off by default).
 
-**Recents tab** (off by default). Adds a Recents tab next to Project, Templates and Assets listing your full history for the project, with each page's location.
+Suggestions are learned from how you use the project, in this browser only, and worked out for the page you're on, so every tab gets its own:
+
+- pages you usually open next from this page score highest, then pages you usually come here from
+- pages you open a lot, especially lately
+- this page's parent, children and siblings get a small nudge (more if you use them)
+- pages you open and quickly leave without coming back sink to the bottom
+- everything fades with a two-week half-life, so old habits drop away
+
+Hover a suggestion to see why it's there. The Suggested tab's **Reset** button forgets the learned history for the project.
 
 **Quick filter key `/`.** Press `/` anywhere outside a text box to jump into the Project Browser's "Find by name or #tag" box, ready to type.
 
@@ -97,7 +105,7 @@ It works in other Chromium browsers (Edge, Brave, Arc) the same way.
 
 - **Writes only when you confirm.** The only feature that changes world data is **Set for subpages**. It runs only after you review the dialog and click Apply, and only through the same functions LegendKeeper's page menu uses. Nothing else creates, edits or deletes content. The Project Browser filter and page navigation are driven through LegendKeeper's own functions.
 - **Read-only lookups.** "Load covers for all pages" and "Set for subpages" read page details through LegendKeeper's own batch loader. The extension doesn't talk to any other server.
-- **Local storage only.** Tabs, tag pins, the saved tag filter, recent pages and cached cover URLs are kept in your browser's `localStorage` under keys starting with `lkt:`. Settings go in `chrome.storage.sync`.
+- **Local storage only.** Tabs, tag pins, the saved tag filter, recent pages, suggestion history and cached cover URLs are kept in your browser's `localStorage` under keys starting with `lkt:`. Settings go in `chrome.storage.sync`.
 - **Fails safe.** If a LegendKeeper update changes the code the extension hooks into, that tweak switches itself off and LegendKeeper carries on normally.
 
 To reset everything for a project, run this in DevTools on a LegendKeeper tab:
@@ -110,15 +118,16 @@ Object.keys(localStorage).filter((k) => k.startsWith("lkt:")).forEach((k) => loc
 
 LegendKeeper is a Next.js app bundled with Turbopack.
 
-- **Patching the Project Browser.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes five small, regex-located edits to the Project Browser's `ResourceBrowser` module:
+- **Patching the Project Browser.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes six small, regex-located edits to the Project Browser's `ResourceBrowser` module:
   - `nested-tag-filter`: before LegendKeeper builds its flat filtered list, hand the matches and the full tree to `__LKT.nestFilter`, which returns a pruned tree (matches plus their ancestors).
+  - `nested-filter-expand`: keeps your folder open/closed state (and the chevrons) working while the nested filter is on; LegendKeeper normally drops it while filtering.
   - `expose-tag-filter`: passes the Project Browser's tag-filter state and setter to the extension, so tag shortcuts drive the real filter.
   - `expose-entity-store`: passes LegendKeeper's client-side data store (read only), used for cover images, tag counts and page names.
   - `expose-navigate`: passes the Project Browser's navigate-to-page function, the same one LegendKeeper's shortcut bar uses (Recent pages, tabs).
   - `expose-adapter`: passes LegendKeeper's data adapter, used to look up covers and page details, and by Set for subpages to call LegendKeeper's own update functions.
 - **Cover icons** are a generated stylesheet keyed on page ID (`<style id="lkt-covers">`). LegendKeeper's DOM, including the rich-text editor, is never modified for them.
 - **Everything else** is added on top of React. It finds LegendKeeper's elements through the `data-insp-path` source annotations LegendKeeper ships in production and the tree's `data-testid="resource-tree-item-<id>"` rows.
-- **`src/features/`** holds the larger features (`tabs.js`, `bulk-settings.js`, `page-extras.js`, `recents-tab.js`). They load after `page-hook.js` and plug into it through `window.__LKT.util` and `__LKT.onRender()`.
+- **`src/features/`** holds the larger features (`suggestions.js`, `tabs.js`, `bulk-settings.js`, `page-extras.js`, `browser-tabs.js`). They load after `page-hook.js` and plug into it through `window.__LKT.util` and `__LKT.onRender()`.
 - **`src/bridge.js`** runs in the extension's isolated world and copies settings from `chrome.storage.sync` onto `<html data-lkt-settings>` for the page script.
 - **`src/settings-button.js`** adds the top-bar button, which opens `popup/popup.html` in a popover themed to match LegendKeeper.
 
@@ -142,7 +151,8 @@ src/
     tabs.js                   Page tabs
     bulk-settings.js          Right-click menu items and the Set for subpages dialog
     page-extras.js            Cover hover preview, reading time
-    recents-tab.js            Recents tab in the Project Browser
+    suggestions.js            Suggested pages: usage tracking and scoring
+    browser-tabs.js           Recents / Suggested tabs in the Project Browser
   bridge.js                   Isolated world: settings bridge
   settings-button.js          Isolated world: top-bar settings button and popover
   tweaks.css                  Styles for injected UI
