@@ -242,14 +242,23 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   user-select: none;
   transition: background-color 120ms, color 120ms;
 }
-.lkt-tab:hover {
-  background: #1b1d1f;
+/* Open tabs get a light fill and outline, so they read as tabs next to the faint suggested
+   and recent ones. The active tab joins the page and is bolder. */
+.lkt-tab:not(.lkt-tab-ghost) {
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  color: #c4c4c8;
+}
+.lkt-tab:not(.lkt-tab-ghost):hover {
+  background: rgb(255 255 255 / 0.09);
   color: #e4e4e7;
 }
 .lkt-tab-active,
 .lkt-tab-active:hover {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: hsl(var(--background)) !important;
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.35) !important;
+  color: hsl(var(--foreground)) !important;
+  font-weight: 600;
 }
 .lkt-tab .lkt-ic,
 .lkt-recent .lkt-ic {

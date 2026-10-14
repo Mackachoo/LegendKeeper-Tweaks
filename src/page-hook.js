@@ -47,18 +47,18 @@
     recentPages: true,
     slashToFilter: true,
     keepTagFilter: true,
-    coverHoverPreview: false,
+    coverHoverPreview: true,
     coverPrefetch: true,
     readingTime: true,
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
-    recentPlacement: "filter", // "off" | "filter" | "bottom" | "tabs"
-    recentTab: false,
-    suggestPlacement: "filter", // "off" | "filter" | "bottom" | "tabs"
+    recentPlacement: "bottom", // "off" | "filter" | "bottom" | "tabs"
+    recentTab: true,
+    suggestPlacement: "tabs", // "off" | "filter" | "bottom" | "tabs"
     suggestTab: false,
     blockHandleScale: 1, // multiplier for content block drag handles
-    tabsFitWidth: false,
+    tabsFitWidth: true,
   };
   function settings() {
     try {

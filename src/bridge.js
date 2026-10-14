@@ -11,18 +11,18 @@
     recentPages: true,
     slashToFilter: true,
     keepTagFilter: true,
-    coverHoverPreview: false,
+    coverHoverPreview: true,
     coverPrefetch: true,
     readingTime: true,
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
-    recentPlacement: "filter",
-    recentTab: false,
-    suggestPlacement: "filter",
+    recentPlacement: "bottom",
+    recentTab: true,
+    suggestPlacement: "tabs",
     suggestTab: false,
     blockHandleScale: 1,
-    tabsFitWidth: false,
+    tabsFitWidth: true,
   };
 
   function publish(settings) {

@@ -18,8 +18,9 @@ This repo also holds two companion tools for working on LegendKeeper with Claude
 - **Middle-click** any page link (Project Browser, @mentions, backlinks…) to open it in a new tab, or right-click a page in the tree and choose **Open in new tab**.
 - Opening a page that's already in a tab switches to that tab.
 - Close a tab with **×** or a middle-click. Drag tabs to reorder them.
+- Open tabs have a light outline, the active one is bold and joins the page; suggested and recent pages are faint, without an outline.
 - Tabs are remembered per project, so they survive a reload.
-- **Adaptive width** (off by default): each tab fits its name, up to the standard width; longer names end in "…".
+- **Adaptive width** (on by default): each tab fits its name, up to the standard width; longer names end in "…".
 - Optionally, suggested and/or recent pages fill the rest of the bar as faint tabs (suggested ones marked ✦); click one to open it as a real tab. Suggestions follow the active tab's page.
 
 ### Pages
@@ -61,7 +62,7 @@ Pins are saved per project, in this browser only.
 
 **Keep tag filter after reload.** The tags you've filtered by stay selected when you reload or come back to the project.
 
-**Recent pages** and **Suggested pages.** Each has its own setting for where it appears: don't show, under the filter box, at the bottom of the Project Browser, or in the tab bar as faint tabs. Each can also be shown as its own tab next to Project, Templates and Assets (**Show as a tab**, off by default).
+**Recent pages** and **Suggested pages.** Each has its own setting for where it appears: don't show, under the filter box, at the bottom of the Project Browser, or in the tab bar as faint tabs. Each can also be shown as its own tab next to Project, Templates and Assets (**Show as a tab**). By default, recent pages show at the bottom of the Project Browser and as a Recents tab, and suggested pages show in the tab bar.
 
 Suggestions are learned from how you use the project, in this browser only, and worked out for the page you're on, so every tab gets its own:
 
@@ -83,7 +84,7 @@ Hover a suggestion to see why it's there. The Suggested tab's **Reset** button f
 
 **Load covers for all pages.** LegendKeeper only loads a page's images once you've opened it. With this on (the default), the extension looks up covers for the rest using LegendKeeper's own read-only batch loader, the one behind link previews. That's a few requests per project, once per browser session. Covers are remembered per project either way.
 
-**Preview on hover** (off by default). Hover a page in the tree to see a larger version of its cover.
+**Preview on hover** (on by default). Hover a page in the tree to see a larger version of its cover.
 
 ### Settings
 
