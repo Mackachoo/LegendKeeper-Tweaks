@@ -381,7 +381,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   right: 0;
 }
 
-/* Cover preview when hovering a page in the sidebar tree. */
+/* Cover preview when hovering a page in the Project Browser tree. */
 .lkt-cover-card {
   position: fixed;
   z-index: 2147483000;

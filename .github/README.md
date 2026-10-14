@@ -1,12 +1,18 @@
 # LegendKeeper Tweaks
 
-<img src="icons/icon128.png" width="96" align="right" alt="LegendKeeper Tweaks logo" />
+<img src="../icons/icon128.png" width="96" align="right" alt="LegendKeeper Tweaks logo" />
 
 A Chrome extension that adds quality-of-life tweaks to [LegendKeeper](https://www.legendkeeper.com), the worldbuilding wiki for tabletop games and fiction: page tabs, tag shortcuts, a Project Browser filter that keeps your tree intact, cover images as page icons, bulk page settings, recent pages and more.
 
 It mostly changes how LegendKeeper looks and behaves in your browser. The one exception is **Set for subpages**, which changes page settings in your world, and only after you review and confirm it.
 
 This repo also holds two companion tools for working on LegendKeeper with Claude: an [MCP server](#legendkeeper-mcp-server) and a [Claude skill for the LegendKeeper SDK](#legendkeeper-sdk-skill).
+
+## About this project
+
+I'm a software developer, but this is very much a vibe-coded project. It isn't trying to replace anything in LegendKeeper or be a permanent part of it. It's a collection of tweaks and quality-of-life changes that I find really useful day to day.
+
+Everything here is about usability: making LegendKeeper easier and quicker to get around, and easier to filter. It doesn't add new content or content features. That's deliberate, and it's the rule for what goes in (see [Contributing](#contributing)).
 
 ## Features
 
@@ -92,7 +98,7 @@ Click the gear-logo button next to **Share** in LegendKeeper's top bar (or the e
 
 ## Install
 
-The extension isn't on the Chrome Web Store, so you load it unpacked:
+The extension isn't on the Chrome Web Store yet, so you load it unpacked:
 
 1. Download or clone this repository.
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
@@ -160,22 +166,24 @@ src/
   tweaks.css                  Styles for injected UI
 popup/                        Settings page (toolbar popup and top-bar popover)
 icons/                        Logo (icon.svg) and PNG sizes
-mcp/legendkeeper-mcp/         MCP server for LegendKeeper (see below)
-.claude/skills/legendkeeper-sdk/  Claude skill for the LegendKeeper API and SDK
+.github/                      This README, the license and GitHub workflows
+.claude/
+  mcp/legendkeeper-mcp/       MCP server for LegendKeeper (see below)
+  skills/legendkeeper-sdk/    Claude skill for the LegendKeeper API and SDK
 ```
 
 ## LegendKeeper MCP server
 
-`mcp/legendkeeper-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server that lets Claude read and edit your LegendKeeper worlds through the official v3 API. Claude can browse, search, read and write pages in Markdown, set infobox facts, add map pins and timeline events, and upload images.
+`.claude/mcp/legendkeeper-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server that lets Claude read and edit your LegendKeeper worlds through the official v3 API. Claude can browse, search, read and write pages in Markdown, set infobox facts, add map pins and timeline events, and upload images.
 
 ```sh
-cd mcp/legendkeeper-mcp
+cd .claude/mcp/legendkeeper-mcp
 npm install
 npm run build
 claude mcp add legendkeeper -e LEGENDKEEPER_KEY_OOO=lk_... -- node "$PWD/dist/index.js"
 ```
 
-You need an API key per world: **Project Settings → Developers → API Keys** (requires a paid plan). Never commit keys. Keep them in your MCP client's config or in a local `.env`, which is git-ignored. See [`mcp/legendkeeper-mcp/README.md`](mcp/legendkeeper-mcp/README.md) for all options, including Claude desktop setup, Docker, multiple worlds and read-only mode.
+You need an API key per world: **Project Settings → Developers → API Keys** (requires a paid plan). Never commit keys. Keep them in your MCP client's config or in a local `.env`, which is git-ignored. See [`.claude/mcp/legendkeeper-mcp/README.md`](../.claude/mcp/legendkeeper-mcp/README.md) for all options, including Claude desktop setup, Docker, multiple worlds and read-only mode.
 
 ## LegendKeeper SDK skill
 
@@ -190,6 +198,20 @@ Useful while working on it:
 - `window.__LKT.patches`: patch status.
 - `window.__LKT.store()`: LegendKeeper's entity store (for example `__LKT.store().resources.get(id)`).
 - `window.__LKT.render()`: force a re-sync of the injected UI.
+
+## Contributing
+
+Issues and pull requests are very welcome, whether that's a bug, a fix, or an idea for a new tweak.
+
+The one rule: **changes should be quality-of-life and usability only, not new content.** Things like navigation, filtering, layout, shortcuts and speed-ups are in scope. New block types, new kinds of page content, or anything that stores extra data inside pages is out.
+
+That's because of how LegendKeeper is used. Projects are often shared by lots of people, and everything this extension does only changes things for you, in your browser; nobody else in the project is affected. New content would break that. If the extension added its own blocks or markup to pages, everyone without it would see odd or broken content. So, as a rule, those don't go in.
+
+When you open a pull request:
+
+- Keep LegendKeeper working if your change stops matching. Patches should fail safe the way the existing ones do (see [How it works](#how-it-works)).
+- Add a setting for anything that changes how LegendKeeper looks or behaves, so people can turn it off.
+- Bump the version in `manifest.json`.
 
 ## Disclaimer
 

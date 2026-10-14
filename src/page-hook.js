@@ -18,7 +18,7 @@
 //
 // Everything else is additive DOM/CSS on top of the React app. The only LegendKeeper data we
 // ever write is through "Apply settings to subpages", an explicit, confirmed action that uses
-// LegendKeeper's own update functions. Otherwise we only drive the sidebar filter and navigation
+// LegendKeeper's own update functions. Otherwise we only drive the Project Browser filter and navigation
 // (through LegendKeeper's own functions) and our own localStorage keys (all prefixed "lkt:").
 (() => {
   "use strict";
@@ -430,7 +430,7 @@
 
   function applyShortcut(tag, additive) {
     if (!tagFilter.set) {
-      flash("Open the Project tab in the sidebar to use tag shortcuts");
+      flash("Open the Project tab in the Project Browser to use tag shortcuts");
       return;
     }
     const cur = tagFilter.tags || [];
@@ -468,7 +468,7 @@
 
   // Marks tag chips that can use native HTML drag (they have no drag behaviour of their own).
   function markTagSources(root) {
-    // Active filter pills in the sidebar: <div class="... rounded-full ..."><span>tag</span><button>×</button></div>
+    // Active filter pills in the Project Browser: <div class="... rounded-full ..."><span>tag</span><button>×</button></div>
     for (const pill of root.querySelectorAll(`div.rounded-full[data-insp-path*="${SHORTCUTS_AND_TAGS}"]`)) {
       const span = pill.querySelector(":scope > span");
       if (span) mark(pill, span.textContent);
@@ -488,7 +488,7 @@
 
   // Tags on a page are LegendKeeper's own sortable (dnd-kit) chips, so we must not make them
   // natively draggable. Instead we watch the pointer: if a drag that started on a page tag ends
-  // over the sidebar filter area, add a shortcut. LegendKeeper's reordering keeps working.
+  // over the Project Browser filter area, add a shortcut. LegendKeeper's reordering keeps working.
   function pageTagName(target) {
     const chip = target instanceof Element && target.closest('[data-insp-path*="sortable-tag.tsx"]');
     if (!chip || target.closest("button")) return null;
@@ -787,7 +787,7 @@
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Feature: cover image as page icon (sidebar tree, inline links, backlinks, collection lists)
+  // Feature: cover image as page icon (Project Browser tree, inline links, backlinks, collection lists)
   //
   // Implemented purely as a generated stylesheet keyed on resource id, so LegendKeeper's DOM —
   // including the rich-text editor — is never modified.
@@ -901,7 +901,7 @@
     const allTree = covers.map(([id]) => treeBtn(id));
 
     let css = perId.join("\n") + "\n";
-    // Sidebar tree: the row itself is the <a>, so the variable is already set on it.
+    // Project Browser tree: the row itself is the <a>, so the variable is already set on it.
     css += `${allTree.join(",\n")}{background-image:var(--lkt-cover);background-size:cover;background-position:center;border-radius:3px;box-shadow:0 0 0 1px rgb(0 0 0/.25)}\n`;
     css += `${allTree.map((t) => `${t}>*`).join(",\n")}{visibility:hidden}\n`;
     if (s.coverIconsInBody) {
@@ -918,7 +918,7 @@
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Feature: press "/" to jump to the sidebar filter
+  // Feature: press "/" to jump to the Project Browser filter
   // ---------------------------------------------------------------------------------------------
   document.addEventListener(
     "keydown",
