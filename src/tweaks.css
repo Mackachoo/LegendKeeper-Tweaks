@@ -207,15 +207,14 @@ div:has(> .lkt-tabs) > :not(.lkt-tabs) {
 }
 /* LegendKeeper's sticky page header and page menu buttons are fixed under the top bar. */
 div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
-  margin-top: 48px;
+  margin-top: 34px;
 }
 .lkt-tabs {
   display: flex;
   flex: none;
   align-items: flex-end;
   gap: 2px;
-  /* Same height as the Project Browser's Project / Templates / Assets row, so the two line up. */
-  height: 48px;
+  height: 34px;
   padding: 0 calc(var(--lkt-tabs-right, 0px) + 8px) 0 8px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -233,10 +232,8 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   gap: 7px;
   min-width: 96px;
   max-width: 220px;
-  /* Tab-shaped styles sit on the page; the bottom padding puts the label level with the
-     Project Browser's tab labels. */
-  height: 40px;
-  padding: 0 6px 8px 10px;
+  height: 30px;
+  padding: 0 6px 0 10px;
   border-radius: 8px 8px 0 0;
   color: #a1a1aa;
   font-size: 12.5px;
@@ -295,14 +292,14 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   color: #fafafa !important;
 }
 
-/* Pills (default): rounded chips floating in the bar. */
+/* Pills (default): rounded chips sitting low in the bar, so their labels are about level with
+   the Project Browser's Project / Templates / Assets. */
 .lkt-tabstyle-pills {
-  align-items: center;
   gap: 4px;
 }
 .lkt-tabstyle-pills .lkt-tab {
-  height: 28px;
-  padding-bottom: 0;
+  height: 22px;
+  margin-bottom: 2px;
   border-radius: 7px;
 }
 .lkt-tabstyle-pills .lkt-tab:not(.lkt-tab-ghost) {
@@ -318,7 +315,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   color: #fafafa !important;
 }
 .lkt-tabstyle-pills .lkt-ghosts {
-  align-items: center;
+  align-items: flex-end;
 }
 
 .lkt-tab .lkt-ic,
