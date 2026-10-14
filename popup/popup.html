@@ -117,17 +117,21 @@
           <label class="row">
             <span class="text">
               <span class="title">Page tabs</span>
-              <span class="desc">A tab bar along the top of the page. Tabs are remembered per project.</span>
+              <span class="desc">A tab bar along the top of the page, remembered per project. Right-click a page in the Project Browser → Open in new tab.</span>
             </span>
             <input type="checkbox" role="switch" data-key="tabs" />
           </label>
           <div class="subs" data-parent="tabs">
             <label class="row">
-              <span class="text">
-                <span class="title">Middle-click opens in a tab</span>
-                <span class="desc">Or right-click a page in the Project Browser → Open in new tab.</span>
-              </span>
+              <span class="text"><span class="title">Middle-click opens in a tab</span></span>
               <input type="checkbox" role="switch" data-key="tabsMiddleClick" />
+            </label>
+            <label class="row">
+              <span class="text">
+                <span class="title">Adaptive width</span>
+                <span class="desc">Tabs fit their names, up to the standard width; longer names end in “…”.</span>
+              </span>
+              <input type="checkbox" role="switch" data-key="tabsFitWidth" />
             </label>
           </div>
         </div>
@@ -142,9 +146,9 @@
               <span class="desc">The grip you drag content blocks by.</span>
             </span>
             <div class="steps">
-              <input type="range" min="0" max="3" step="1" data-key="blockHandleSize" aria-label="Block handle size" list="handle-steps" />
-              <datalist id="handle-steps"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option></datalist>
-              <div class="step-labels"><span>Small</span><span>Standard</span><span>Large</span><span>Larger</span></div>
+              <input type="range" min="0" max="6" step="1" data-key="blockHandleScale" data-values="0.5,1,1.5,2,2.5,3,4" aria-label="Block handle size" list="handle-steps" />
+              <datalist id="handle-steps"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option><option value="5"></option><option value="6"></option></datalist>
+              <div class="step-labels"><span>0.5×</span><span>1×</span><span>1.5×</span><span>2×</span><span>2.5×</span><span>3×</span><span>4×</span></div>
             </div>
           </div>
         </div>

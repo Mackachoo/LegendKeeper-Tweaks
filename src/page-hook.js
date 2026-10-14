@@ -57,7 +57,8 @@
     recentTab: false,
     suggestPlacement: "filter", // "off" | "filter" | "bottom" | "tabs"
     suggestTab: false,
-    blockHandleSize: 1, // 0 small, 1 standard, 2 large, 3 larger
+    blockHandleScale: 1, // multiplier for content block drag handles
+    tabsFitWidth: false,
   };
   function settings() {
     try {
@@ -945,9 +946,15 @@
       renderPageRow("suggested", area);
       renderPageRow("recent", area);
     }
-    // Content block handle size (CSS in tweaks.css keys off this attribute).
-    const handle = String(settings().blockHandleSize ?? 1);
-    if (document.documentElement.dataset.lktHandle !== handle) document.documentElement.dataset.lktHandle = handle;
+    // Content block handle size: tweaks.css scales LegendKeeper's grip by --lkt-handle-scale.
+    const scale = Number(settings().blockHandleScale) || 1;
+    const root = document.documentElement;
+    if (scale === 1) {
+      if (root.hasAttribute("data-lkt-handle")) root.removeAttribute("data-lkt-handle");
+    } else if (root.dataset.lktHandle !== String(scale)) {
+      root.dataset.lktHandle = String(scale);
+      root.style.setProperty("--lkt-handle-scale", String(scale));
+    }
     markTagSources(document);
     renderCoverStyles();
     for (const fn of renderHooks) {

@@ -21,7 +21,8 @@
     recentTab: false,
     suggestPlacement: "filter",
     suggestTab: false,
-    blockHandleSize: 1,
+    blockHandleScale: 1,
+    tabsFitWidth: false,
   };
 
   function publish(settings) {
@@ -30,10 +31,18 @@
   }
 
   document.documentElement.dataset.lktVersion = chrome.runtime.getManifest().version;
-  chrome.storage.sync.get(DEFAULTS, (settings) => {
+  // Read everything stored (not just current keys) so old settings can be migrated.
+  chrome.storage.sync.get(null, (stored) => {
+    const settings = { ...DEFAULTS, ...stored };
     // 0.6.0: the old Recent pages on/off switch became a "Don't show" placement.
     if (settings.recentPages === false) {
       chrome.storage.sync.set({ recentPages: true, recentPlacement: "off" });
+      return;
+    }
+    // 0.7.0: the four named handle sizes became multipliers.
+    if (settings.blockHandleSize !== undefined) {
+      const scale = { 0: 0.5, 1: 1, 2: 1.5, 3: 1.5 }[settings.blockHandleSize] ?? 1;
+      chrome.storage.sync.remove("blockHandleSize", () => chrome.storage.sync.set({ blockHandleScale: scale }));
       return;
     }
     publish(settings);

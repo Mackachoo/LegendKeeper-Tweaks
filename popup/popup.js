@@ -18,7 +18,8 @@ const DEFAULTS = {
   recentTab: false,
   suggestPlacement: "filter",
   suggestTab: false,
-  blockHandleSize: 1,
+  blockHandleScale: 1,
+  tabsFitWidth: false,
 };
 
 document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
@@ -40,12 +41,17 @@ const inputs = [...document.querySelectorAll("input[data-key], select[data-key]"
 
 function readInput(input) {
   if (input.type === "checkbox") return input.checked;
-  if (input.type === "range") return Number(input.value);
+  if (input.type === "range") return input.dataset.values ? Number(input.dataset.values.split(",")[input.value]) : Number(input.value);
   return input.value; // radio, select
 }
 function writeInput(input, value) {
   if (input.type === "checkbox") input.checked = !!value;
-  else if (input.type === "range") input.value = String(value);
+  else if (input.type === "range" && input.dataset.values) {
+    // Snap to the nearest step.
+    const steps = input.dataset.values.split(",").map(Number);
+    const i = steps.reduce((best, v, k) => (Math.abs(v - value) < Math.abs(steps[best] - value) ? k : best), 0);
+    input.value = String(i);
+  } else if (input.type === "range") input.value = String(value);
   else if (input.tagName === "SELECT") input.value = value;
   else input.checked = input.value === value;
 }

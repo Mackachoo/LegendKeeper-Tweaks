@@ -19,6 +19,7 @@ This repo also holds two companion tools for working on LegendKeeper with Claude
 - Opening a page that's already in a tab switches to that tab.
 - Close a tab with **×** or a middle-click. Drag tabs to reorder them.
 - Tabs are remembered per project, so they survive a reload.
+- **Adaptive width** (off by default): each tab fits its name, up to the standard width; longer names end in "…".
 - Optionally, suggested and/or recent pages fill the rest of the bar as faint tabs (suggested ones marked ✦); click one to open it as a real tab. Suggestions follow the active tab's page.
 
 ### Pages
@@ -36,7 +37,7 @@ Each setting starts on **Leave**; only the ones you switch to On, Off or Set are
 
 **Reading time.** Longer pages (300+ words) show "4 min read · 900 words" at the end of the title row.
 
-**Block handle size.** A four-step slider (Small, Standard, Large, Larger) for the grip you drag content blocks by.
+**Block handle size.** A slider for the grip you drag content blocks by: 0.5×, 1×, 1.5×, 2×, 2.5×, 3× or 4×.
 
 ### Project Browser
 

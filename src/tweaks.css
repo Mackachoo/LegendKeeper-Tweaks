@@ -686,15 +686,14 @@ div:has(> .lkt-browser-panel:not([hidden])) > [role="tabpanel"] {
 
 /* Content block drag handle size. LegendKeeper positions the handle with left/top, so scaling
    it from its right edge (next to the block) leaves its placement alone. */
-html[data-lkt-handle="0"] .lk-tier-grabber {
-  transform: scale(0.8);
+html[data-lkt-handle] .lk-tier-grabber {
+  transform: scale(var(--lkt-handle-scale, 1));
   transform-origin: right center;
 }
-html[data-lkt-handle="2"] .lk-tier-grabber {
-  transform: scale(1.3);
-  transform-origin: right center;
-}
-html[data-lkt-handle="3"] .lk-tier-grabber {
-  transform: scale(1.6);
-  transform-origin: right center;
+
+/* Adaptive-width tabs: each tab fits its name, up to the standard width. */
+.lkt-tabs.lkt-tabs-fit .lkt-tab:not(.lkt-tab-ghost) {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 220px;
 }

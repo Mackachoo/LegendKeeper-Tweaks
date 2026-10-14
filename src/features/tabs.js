@@ -137,6 +137,7 @@
     if (!settings().tabs || !projectId() || !host) return removeStrip();
     syncWithLocation();
     const el = ensureStrip(host);
+    el.classList.toggle("lkt-tabs-fit", !!settings().tabsFitWidth);
     const state = load();
     const pid = projectId();
     const tabs = state.ids.map((id) => ({ id, r: getResource(id) })).filter(({ r }) => r && !r.deletedAt);
