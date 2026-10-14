@@ -1,9 +1,13 @@
 name: Deploy to Chrome Web Store
 
+# Publishes the extension when the version in manifest.json changes on main.
+# Pushes that don't touch manifest.json don't run this at all; pushes that touch it
+# without changing "version" stop at the version check.
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths: [manifest.json]
+  workflow_dispatch: # manual run: publishes the current version if it hasn't been released
 
 concurrency:
   group: deploy
@@ -23,42 +27,50 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-tags: true
+          fetch-depth: 0 # need the previous commit's manifest and the tags
 
-      # The store rejects a version it has already seen, so only deploy when
-      # package.json has a version that hasn't been tagged yet.
+      # Release only when manifest.json's version differs from the previous commit (on push)
+      # and hasn't been released (tagged) before. The store rejects versions it has seen.
       - name: Check version
         id: version
+        env:
+          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
         run: |
-          version=$(node -p "require('./package.json').version")
+          version=$(jq -r .version manifest.json)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
-            echo "v$version is already released; bump the version in package.json to deploy."
-            echo "release=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "release=true" >> "$GITHUB_OUTPUT"
+          release=true
+          if [ "$EVENT" = "push" ] && [ -n "$BEFORE" ] && git cat-file -e "$BEFORE:manifest.json" 2>/dev/null; then
+            previous=$(git show "$BEFORE:manifest.json" | jq -r .version)
+            if [ "$previous" = "$version" ]; then
+              echo "Version unchanged ($version); nothing to publish."
+              release=false
+            fi
           fi
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already released; bump the version in manifest.json to publish."
+            release=false
+          fi
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          if [ "$release" = true ]; then echo "Publishing v$version."; fi
 
-      - uses: actions/setup-node@v5
+      - name: Check extension
         if: steps.version.outputs.release == 'true'
-        with:
-          node-version: 24
-          cache: npm
-
-      - if: steps.version.outputs.release == 'true'
-        run: npm ci
-
-      - name: Test
-        if: steps.version.outputs.release == 'true'
-        run: npm test
-
-      - name: Build
-        if: steps.version.outputs.release == 'true'
-        run: npm run build
+        run: |
+          # Every JS file parses, and every file the manifest references exists.
+          for f in $(find src popup -name '*.js'); do node --check "$f"; done
+          jq -r '.content_scripts[].js[], .content_scripts[].css[]?, .action.default_popup, .icons[]' manifest.json \
+            | while read -r f; do [ -f "$f" ] || { echo "::error::manifest.json references missing file $f"; exit 1; }; done
 
       - name: Package
         if: steps.version.outputs.release == 'true'
-        run: cd dist && zip -r ../tabulous.zip .
+        run: zip -r -X extension.zip manifest.json src popup icons
+
+      - uses: actions/upload-artifact@v4
+        if: steps.version.outputs.release == 'true'
+        with:
+          name: legendkeeper-tweaks-${{ steps.version.outputs.version }}
+          path: extension.zip
 
       - name: Get access token
         if: steps.version.outputs.release == 'true'
@@ -85,21 +97,22 @@ jobs:
           base="publishers/$PUBLISHER_ID/items/$EXTENSION_ID"
           res=$(curl -sS --fail-with-body -X POST \
             -H "Authorization: Bearer $CWS_TOKEN" \
-            -T tabulous.zip \
-            "$CWS_API/upload/v2/$base:upload") \
+            -H "Content-Type: application/zip" \
+            --data-binary @extension.zip \
+            "$CWS_API/upload/v2/$base:upload?uploadType=media") \
             || { echo "::error::Upload request failed: $res"; exit 1; }
           echo "$res"
           state=$(jq -r .uploadState <<<"$res")
           # Large uploads are processed asynchronously.
           for _ in $(seq 30); do
-            [ "$state" = "IN_PROGRESS" ] || [ "$state" = "UPLOAD_IN_PROGRESS" ] || break
+            [ "$state" = "IN_PROGRESS" ] || break
             sleep 10
             res=$(curl -sS --fail-with-body -H "Authorization: Bearer $CWS_TOKEN" "$CWS_API/v2/$base:fetchStatus") \
               || { echo "::error::Status request failed: $res"; exit 1; }
             state=$(jq -r .lastAsyncUploadState <<<"$res")
             echo "Upload state: $state"
           done
-          if [ "$state" != "SUCCEEDED" ] && [ "$state" != "UPLOAD_SUCCEEDED" ]; then
+          if [ "$state" != "SUCCEEDED" ]; then
             echo "::error::Upload did not succeed: $res"
             exit 1
           fi

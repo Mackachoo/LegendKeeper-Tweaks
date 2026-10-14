@@ -9,26 +9,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
         with:
-          node-version: 24
-          cache: npm
+          fetch-depth: 0
 
-      - run: npm ci
+      - name: Check extension
+        run: |
+          # manifest.json is valid, every file it references exists, and every JS file parses.
+          jq -e . manifest.json >/dev/null
+          jq -r '.content_scripts[].js[], .content_scripts[].css[]?, .action.default_popup, .icons[]' manifest.json \
+            | while read -r f; do [ -f "$f" ] || { echo "::error::manifest.json references missing file $f"; exit 1; }; done
+          for f in $(find src popup -name '*.js'); do node --check "$f"; done
 
-      - name: Test
-        run: npm test
+      - name: Version bumped
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # Changes to the extension should bump manifest.json's version so they get published.
+          if git diff --quiet "$BASE" HEAD -- manifest.json src popup icons; then
+            echo "No extension changes."
+            exit 0
+          fi
+          before=$(git show "$BASE:manifest.json" | jq -r .version)
+          after=$(jq -r .version manifest.json)
+          if [ "$before" = "$after" ]; then
+            echo "::warning::Extension files changed but manifest.json is still $after. Bump the version so it gets published."
+          fi
 
-      # Typechecks, then builds the extension into dist/.
-      - name: Build
-        run: npm run build
+      - name: Package
+        run: zip -r -X extension.zip manifest.json src popup icons
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tabulous-dist
-          path: dist
+          name: legendkeeper-tweaks
+          path: extension.zip
