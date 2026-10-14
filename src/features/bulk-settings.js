@@ -1,4 +1,4 @@
-// LegendKeeper Tweaks — right-click menu additions for pages in the sidebar tree:
+// LegendKeeper Tweaks — right-click menu additions for pages in the Project Browser:
 //   - "Open in new tab" (when tabs are on)
 //   - "Apply settings to subpages…": set page settings on a page and everything under it
 //

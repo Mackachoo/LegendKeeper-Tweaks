@@ -1,18 +1,20 @@
 // LegendKeeper Tweaks — page tabs.
 //
-// A tab strip under LegendKeeper's top bar, lined up with the content pane. It behaves like
-// browser tabs:
+// A tab strip along the top of the page content (the Project Browser on the left and the page's
+// sidebar on the right keep their full height). It behaves like browser tabs:
 //   - navigating normally changes the page in the active tab
 //   - opening a page that's already in a tab switches to that tab
 //   - middle-click any page link (tree, @mentions, backlinks, ...) to open it in a new tab
 //   - right-click a page in the tree → "Open in new tab"
 //   - × or middle-click a tab to close it; drag tabs to reorder
+//   - optionally, recent pages fill the rest of the bar as faint "suggested" tabs; clicking one
+//     opens it as a real tab
 // Tabs are saved per project, so they survive reloads.
 (() => {
   "use strict";
   const LKT = window.__LKT;
   if (!LKT || !LKT.util) return;
-  const { settings, getResource, projectId, currentResourceId, loadJSON, saveJSON, navigateToResource, glyphClass } =
+  const { settings, getResource, projectId, currentResourceId, loadJSON, saveJSON, navigateToResource, glyphClass, recentPages } =
     LKT.util;
 
   const MAX_TABS = 24;
@@ -87,15 +89,26 @@
 
   // --- the strip -------------------------------------------------------------------------------
   let strip = null;
-  let resizeObs = null;
 
-  function findNavWrapper() {
-    const nav = document.querySelector('[data-insp-path*="views/project/components/NavBar/index.tsx"]');
-    // The navbar sits inside a display:contents wrapper that is a child of the layout column.
-    return nav && nav.parentElement && nav.parentElement.parentElement ? nav.parentElement : null;
+  // The content area: LegendKeeper's layout column that holds the page view. The strip goes in
+  // as its first child; tweaks.css turns that column vertical so the page sits under the strip.
+  function findContentHost() {
+    const view = document.querySelector(".resource-view-wrapper");
+    return view && view.parentElement && view.parentElement.matches('[data-insp-path*="LayoutManager/index.tsx"]')
+      ? view.parentElement
+      : null;
   }
 
-  function ensureStrip(navWrapper) {
+  // The page's own sidebar is position:fixed over the right of the content area, so keep the
+  // tabs clear of it.
+  function rightInset() {
+    const side = document.querySelector('.resource-view-wrapper [data-insp-path*="components/Sidebar.tsx"].fixed');
+    if (!side) return 0;
+    const r = side.getBoundingClientRect();
+    return r.width > 0 && r.left < window.innerWidth ? Math.max(0, window.innerWidth - r.left) : 0;
+  }
+
+  function ensureStrip(host) {
     if (!strip) {
       strip = document.createElement("div");
       strip.className = "lkt-tabs";
@@ -109,16 +122,9 @@
       strip.addEventListener("drop", onDrop);
       strip.addEventListener("dragend", () => strip.querySelectorAll(".lkt-tab-drop").forEach((t) => t.classList.remove("lkt-tab-drop")));
     }
-    if (strip.previousElementSibling !== navWrapper) navWrapper.after(strip);
-    // Line the tabs up with the content pane (to the right of the sidebar).
-    const row = strip.nextElementSibling;
-    const sidebar = row && row.firstElementChild;
-    if (sidebar && (!resizeObs || resizeObs.target !== sidebar)) {
-      resizeObs && resizeObs.disconnect();
-      resizeObs = new ResizeObserver(() => strip.style.setProperty("--lkt-tabs-inset", `${sidebar.getBoundingClientRect().width}px`));
-      resizeObs.observe(sidebar);
-      resizeObs.target = sidebar;
-    }
+    if (host.firstElementChild !== strip) host.prepend(strip);
+    const inset = `${Math.round(rightInset())}px`;
+    if (strip.style.getPropertyValue("--lkt-tabs-right") !== inset) strip.style.setProperty("--lkt-tabs-right", inset);
     return strip;
   }
 
@@ -127,14 +133,19 @@
   }
 
   function render() {
-    const navWrapper = findNavWrapper();
-    if (!settings().tabs || !projectId() || !navWrapper) return removeStrip();
+    const host = findContentHost();
+    if (!settings().tabs || !projectId() || !host) return removeStrip();
     syncWithLocation();
-    const el = ensureStrip(navWrapper);
+    const el = ensureStrip(host);
     const state = load();
     const pid = projectId();
     const tabs = state.ids.map((id) => ({ id, r: getResource(id) })).filter(({ r }) => r && !r.deletedAt);
-    const sig = JSON.stringify([pid, state.active, tabs.map(({ id, r }) => [id, r.name, r.iconGlyph, r.iconColor])]);
+    const s = settings();
+    const ghosts =
+      s.recentPages && s.recentPlacement === "tabs"
+        ? recentPages(12).filter(({ id }) => !state.ids.includes(id))
+        : [];
+    const sig = JSON.stringify([pid, state.active, tabs.map(({ id, r }) => [id, r.name, r.iconGlyph, r.iconColor]), ghosts.map(({ id, r }) => [id, r.name])]);
     if (el.dataset.sig === sig) return;
     el.dataset.sig = sig;
     el.replaceChildren();
@@ -159,6 +170,23 @@
       }
       el.append(a);
     }
+    if (ghosts.length) {
+      // Recent pages fill the rest of the bar as faint tabs; whatever doesn't fit is clipped.
+      const wrap = Object.assign(document.createElement("div"), { className: "lkt-ghosts" });
+      wrap.title = "Recent pages";
+      for (const { id, r } of ghosts) {
+        const a = document.createElement("a");
+        a.className = "lkt-tab lkt-tab-ghost";
+        a.href = `/a/${pid}/${id}`;
+        a.dataset.lktGhost = id;
+        a.title = `${r.name} (recent)`;
+        const icon = document.createElement("i");
+        icon.className = "lkt-ic " + glyphClass(r.iconGlyph);
+        a.append(icon, Object.assign(document.createElement("span"), { className: "lkt-tab-label", textContent: r.name }));
+        wrap.append(a);
+      }
+      el.append(wrap);
+    }
     // Bring the active tab into view by scrolling the strip only. (scrollIntoView would also
     // scroll LegendKeeper's overflow-hidden app container and shift the whole layout.)
     const active = el.querySelector(".lkt-tab-active");
@@ -177,12 +205,26 @@
       closeTab(close.dataset.lktClose);
       return;
     }
+    const ghost = e.target.closest("[data-lkt-ghost]");
+    if (ghost && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+      // Open the suggestion as a real tab and switch to it.
+      e.preventDefault();
+      openInNewTab(ghost.dataset.lktGhost);
+      navigateToResource(ghost.dataset.lktGhost);
+      return;
+    }
     const tab = e.target.closest("[data-lkt-tab]");
     if (!tab || e.metaKey || e.ctrlKey || e.shiftKey) return; // let the browser open a real tab
     e.preventDefault();
     if (!tab.classList.contains("lkt-tab-active")) navigateToResource(tab.dataset.lktTab);
   }
   function onAuxClick(e) {
+    const ghost = e.button === 1 && e.target.closest("[data-lkt-ghost]");
+    if (ghost) {
+      e.preventDefault();
+      openInNewTab(ghost.dataset.lktGhost);
+      return;
+    }
     const tab = e.button === 1 && e.target.closest("[data-lkt-tab]");
     if (!tab) return;
     e.preventDefault();

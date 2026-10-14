@@ -94,10 +94,13 @@ h2 {
   text-transform: uppercase;
 }
 
-.group {
+.card {
   overflow: hidden;
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
+}
+.card + .card {
+  margin-top: 8px;
 }
 
 .row {
@@ -108,21 +111,35 @@ h2 {
   cursor: pointer;
   transition: background-color 120ms;
 }
+label.row:hover {
+  background: hsl(var(--card) / 0.6);
+}
 .row + .row {
   border-top: 1px solid hsl(var(--border));
 }
-.row:hover {
-  background: hsl(var(--card) / 0.6);
+.row.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  cursor: default;
 }
-.row.sub {
-  padding-left: 28px;
+
+/* A feature's own options: inside its card, on a slightly raised background. */
+.subs {
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.45);
 }
-.row.sub .title {
+.subs[hidden] {
+  display: none;
+}
+.subs .row {
+  padding: 8px 12px 8px 22px;
+}
+.subs .row + .row {
+  border-top-color: hsl(var(--border) / 0.6);
+}
+.subs .title {
   font-weight: 400;
-}
-.row.disabled {
-  opacity: 0.45;
-  pointer-events: none;
 }
 
 .text {
@@ -198,4 +215,57 @@ footer {
   color: hsl(var(--muted-foreground));
   font-size: 12px;
   line-height: 1.45;
+}
+
+.desc.hint[hidden] {
+  display: none;
+}
+
+/* Segmented choice (matches LegendKeeper's dialogs). */
+.seg {
+  display: flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: hsl(var(--foreground) / 0.07);
+}
+.seg input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.seg label {
+  flex: 1;
+  padding: 5px 6px;
+  border-radius: 6px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms;
+}
+.seg input:checked + label {
+  background: hsl(var(--background));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  color: hsl(var(--foreground));
+}
+.seg input:focus-visible + label {
+  outline: 2px solid hsl(var(--muted-foreground));
+  outline-offset: 1px;
+}
+
+/* Stepped slider. */
+.steps {
+  padding: 0 2px;
+}
+.steps input[type="range"] {
+  width: 100%;
+  margin: 4px 0 2px;
+  accent-color: hsl(var(--foreground));
+  cursor: pointer;
+}
+.step-labels {
+  display: flex;
+  justify-content: space-between;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
 }

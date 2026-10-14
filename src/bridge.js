@@ -17,6 +17,9 @@
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
+    recentPlacement: "filter",
+    recentTab: false,
+    blockHandleSize: 1,
   };
 
   function publish(settings) {

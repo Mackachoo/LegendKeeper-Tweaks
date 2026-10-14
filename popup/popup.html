@@ -13,23 +13,27 @@
     </header>
 
     <main>
+      <!-- Each card is one feature; its options live inside the same card. -->
       <section>
-        <h2>Sidebar</h2>
-        <div class="group">
+        <h2>Project Browser</h2>
+
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Tag shortcuts</span>
-              <span class="desc">Drag a tag into the sidebar filter area to pin it. Click a pinned tag to filter by it.</span>
+              <span class="desc">Drag a tag into the filter area to pin it. Click a pinned tag to filter by it.</span>
             </span>
             <input type="checkbox" role="switch" data-key="tagShortcuts" />
           </label>
-          <label class="row sub" data-parent="tagShortcuts">
-            <span class="text">
-              <span class="title">Show page counts</span>
-              <span class="desc">How many pages have each pinned tag.</span>
-            </span>
-            <input type="checkbox" role="switch" data-key="tagCounts" />
-          </label>
+          <div class="subs" data-parent="tagShortcuts">
+            <label class="row">
+              <span class="text"><span class="title">Show page counts</span></span>
+              <input type="checkbox" role="switch" data-key="tagCounts" />
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Keep tree when filtering</span>
@@ -40,21 +44,51 @@
           <label class="row">
             <span class="text">
               <span class="title">Keep tag filter after reload</span>
-              <span class="desc">Your selected tags stay selected when you reload or come back to the project.</span>
+              <span class="desc">Selected tags stay selected when you reload or come back to the project.</span>
             </span>
             <input type="checkbox" role="switch" data-key="keepTagFilter" />
           </label>
+        </div>
+
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Recent pages</span>
-              <span class="desc">Your last few pages in this project, under the filter box.</span>
+              <span class="desc">Quick links to the last pages you opened in this project.</span>
             </span>
             <input type="checkbox" role="switch" data-key="recentPages" />
           </label>
+          <div class="subs" data-parent="recentPages">
+            <div class="row stacked">
+              <span class="text"><span class="title">Show them</span></span>
+              <div class="seg" role="radiogroup" aria-label="Where recent pages appear">
+                <input type="radio" name="recentPlacement" id="rp-filter" value="filter" data-key="recentPlacement" />
+                <label for="rp-filter">Under filter</label>
+                <input type="radio" name="recentPlacement" id="rp-bottom" value="bottom" data-key="recentPlacement" />
+                <label for="rp-bottom">At bottom</label>
+                <input type="radio" name="recentPlacement" id="rp-tabs" value="tabs" data-key="recentPlacement" />
+                <label for="rp-tabs">In tab bar</label>
+              </div>
+              <span class="desc hint" data-show-when="recentPlacement=tabs">Shown as faint tabs after your open ones; click one to open it. Needs Page tabs on.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <label class="row">
+            <span class="text">
+              <span class="title">Recents tab</span>
+              <span class="desc">Adds a Recents tab next to Project, Templates and Assets with your full history.</span>
+            </span>
+            <input type="checkbox" role="switch" data-key="recentTab" />
+          </label>
+        </div>
+
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Quick filter key <kbd>/</kbd></span>
-              <span class="desc">Press <kbd>/</kbd> anywhere outside a text box to jump straight into the sidebar's “Find by name or #tag” box, ready to type.</span>
+              <span class="desc">Press <kbd>/</kbd> anywhere outside a text box to jump into “Find by name or #tag”.</span>
             </span>
             <input type="checkbox" role="switch" data-key="slashToFilter" />
           </label>
@@ -63,38 +97,57 @@
 
       <section>
         <h2>Tabs</h2>
-        <div class="group">
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Page tabs</span>
-              <span class="desc">A tab bar above the page. Switch between open pages in one click; tabs are remembered per project.</span>
+              <span class="desc">A tab bar along the top of the page. Tabs are remembered per project.</span>
             </span>
             <input type="checkbox" role="switch" data-key="tabs" />
           </label>
-          <label class="row sub" data-parent="tabs">
-            <span class="text">
-              <span class="title">Middle-click opens in a tab</span>
-              <span class="desc">Middle-click any page link, or right-click a page in the tree → Open in new tab.</span>
-            </span>
-            <input type="checkbox" role="switch" data-key="tabsMiddleClick" />
-          </label>
+          <div class="subs" data-parent="tabs">
+            <label class="row">
+              <span class="text">
+                <span class="title">Middle-click opens in a tab</span>
+                <span class="desc">Or right-click a page in the Project Browser → Open in new tab.</span>
+              </span>
+              <input type="checkbox" role="switch" data-key="tabsMiddleClick" />
+            </label>
+          </div>
         </div>
       </section>
 
       <section>
         <h2>Pages</h2>
-        <div class="group">
+        <div class="card">
+          <div class="row stacked">
+            <span class="text">
+              <span class="title">Block handle size</span>
+              <span class="desc">The grip you drag content blocks by.</span>
+            </span>
+            <div class="steps">
+              <input type="range" min="0" max="3" step="1" data-key="blockHandleSize" aria-label="Block handle size" list="handle-steps" />
+              <datalist id="handle-steps"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option></datalist>
+              <div class="step-labels"><span>Small</span><span>Standard</span><span>Large</span><span>Larger</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Reading time</span>
-              <span class="desc">Shows “4 min read · 900 words” next to the breadcrumbs on longer pages.</span>
+              <span class="desc">“4 min read · 900 words” at the end of the title on longer pages.</span>
             </span>
             <input type="checkbox" role="switch" data-key="readingTime" />
           </label>
+        </div>
+
+        <div class="card">
           <label class="row">
             <span class="text">
-              <span class="title">Apply settings to subpages</span>
-              <span class="desc">Right-click a page in the tree → “Set for subpages…” to set layout, lock, hide, sidebar and icon options on it and everything under it.</span>
+              <span class="title">Set for subpages</span>
+              <span class="desc">Right-click a page in the Project Browser to set layout, lock, hide, sidebar and icon options on it and everything under it.</span>
             </span>
             <input type="checkbox" role="switch" data-key="bulkSettings" />
           </label>
@@ -103,47 +156,43 @@
 
       <section>
         <h2>Cover images</h2>
-        <div class="group">
+        <div class="card">
           <label class="row">
             <span class="text">
               <span class="title">Covers as page icons</span>
-              <span class="desc">Swap a page's icon in the sidebar tree for a small square crop of its cover image.</span>
+              <span class="desc">A small square crop of each page's cover replaces its icon in the Project Browser.</span>
             </span>
             <input type="checkbox" role="switch" data-key="coverIcons" />
           </label>
-          <label class="row sub" data-parent="coverIcons">
-            <span class="text">
-              <span class="title">Load covers for all pages</span>
-              <span class="desc">Fetch covers for pages you haven't opened yet (a few read-only requests, once per session).</span>
-            </span>
-            <input type="checkbox" role="switch" data-key="coverPrefetch" />
-          </label>
-          <label class="row sub" data-parent="coverIcons">
-            <span class="text">
-              <span class="title">Also in page content</span>
-              <span class="desc">@mention links, Backlinks and collection lists.</span>
-            </span>
-            <input type="checkbox" role="switch" data-key="coverIconsInBody" />
-          </label>
-          <label class="row sub" data-parent="coverIcons">
-            <span class="text">
-              <span class="title">Fall back to banner</span>
-              <span class="desc">Use the page banner when there's no cover image.</span>
-            </span>
-            <input type="checkbox" role="switch" data-key="coverIconsUseBanner" />
-          </label>
-          <label class="row sub" data-parent="coverIcons">
-            <span class="text">
-              <span class="title">Preview on hover</span>
-              <span class="desc">Show a larger cover when you hover a page in the tree.</span>
-            </span>
-            <input type="checkbox" role="switch" data-key="coverHoverPreview" />
-          </label>
+          <div class="subs" data-parent="coverIcons">
+            <label class="row">
+              <span class="text">
+                <span class="title">Also in page content</span>
+                <span class="desc">@mentions, Backlinks, collection lists, tabs and recents.</span>
+              </span>
+              <input type="checkbox" role="switch" data-key="coverIconsInBody" />
+            </label>
+            <label class="row">
+              <span class="text">
+                <span class="title">Load covers for all pages</span>
+                <span class="desc">Includes pages you haven't opened (a few read-only requests, once per session).</span>
+              </span>
+              <input type="checkbox" role="switch" data-key="coverPrefetch" />
+            </label>
+            <label class="row">
+              <span class="text"><span class="title">Fall back to banner</span></span>
+              <input type="checkbox" role="switch" data-key="coverIconsUseBanner" />
+            </label>
+            <label class="row">
+              <span class="text"><span class="title">Preview on hover</span></span>
+              <input type="checkbox" role="switch" data-key="coverHoverPreview" />
+            </label>
+          </div>
         </div>
       </section>
     </main>
 
-    <footer>Covers are remembered per project. With “Load covers for all pages” off, a page's cover appears once you've opened or hovered it.</footer>
+    <footer>Settings sync across your Chrome profile. Tabs, pins and recents are saved per project in this browser.</footer>
     <script src="popup.js"></script>
   </body>
 </html>

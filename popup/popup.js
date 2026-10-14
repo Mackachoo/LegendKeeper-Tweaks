@@ -14,6 +14,9 @@ const DEFAULTS = {
   tabs: true,
   tabsMiddleClick: true,
   bulkSettings: true,
+  recentPlacement: "filter",
+  recentTab: false,
+  blockHandleSize: 1,
 };
 
 document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
@@ -33,19 +36,34 @@ if (params.has("embedded")) {
 
 const inputs = [...document.querySelectorAll("input[data-key]")];
 
-// Sub-options only matter while their parent tweak is on.
+function readInput(input) {
+  if (input.type === "checkbox") return input.checked;
+  if (input.type === "range") return Number(input.value);
+  return input.value; // radio
+}
+function writeInput(input, value) {
+  if (input.type === "checkbox") input.checked = !!value;
+  else if (input.type === "range") input.value = String(value);
+  else input.checked = input.value === value;
+}
+
+// A feature's options only show while the feature is on; hints show for specific choices.
 function syncDependents() {
-  for (const row of document.querySelectorAll(".row[data-parent]")) {
-    const parentInput = document.querySelector(`input[data-key="${row.dataset.parent}"]`);
-    row.classList.toggle("disabled", !parentInput.checked);
+  for (const subs of document.querySelectorAll(".subs[data-parent]")) {
+    subs.hidden = !document.querySelector(`input[data-key="${subs.dataset.parent}"]`).checked;
+  }
+  for (const hint of document.querySelectorAll("[data-show-when]")) {
+    const [key, value] = hint.dataset.showWhen.split("=");
+    hint.hidden = document.querySelector(`input[data-key="${key}"]:checked`)?.value !== value;
   }
 }
 
 chrome.storage.sync.get(DEFAULTS, (settings) => {
   for (const input of inputs) {
-    input.checked = !!settings[input.dataset.key];
-    input.addEventListener("change", () => {
-      chrome.storage.sync.set({ [input.dataset.key]: input.checked });
+    writeInput(input, settings[input.dataset.key]);
+    input.addEventListener(input.type === "range" ? "input" : "change", () => {
+      if (input.type === "radio" && !input.checked) return;
+      chrome.storage.sync.set({ [input.dataset.key]: readInput(input) });
       syncDependents();
     });
   }

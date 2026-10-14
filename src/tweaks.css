@@ -143,8 +143,8 @@
 
 /* Settings button in LegendKeeper's top bar (next to Share) and its popover. */
 .lkt-settings-button {
-  padding-left: 9px !important;
-  padding-right: 9px !important;
+  height: 36px;
+  padding: 9px !important;
   margin-right: 4px;
 }
 .lkt-settings-button img {
@@ -189,16 +189,30 @@
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Page tabs — a strip under the top bar, lined up with the content pane.
+   Page tabs — a strip along the top of the page content only. The Project Browser (left) and
+   the page's sidebar (right, position:fixed) keep their full height.
    The top bar is always dark; the active tab takes the page background so it joins the page.
    --------------------------------------------------------------------------------------------- */
+/* LegendKeeper's content area is a flex row; with our strip as its first child, stack it. */
+div:has(> .lkt-tabs) {
+  flex-direction: column;
+}
+div:has(> .lkt-tabs) > :not(.lkt-tabs) {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto !important;
+}
+/* LegendKeeper's sticky page header and page menu buttons are fixed under the top bar. */
+div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
+  margin-top: 34px;
+}
 .lkt-tabs {
   display: flex;
   flex: none;
   align-items: flex-end;
   gap: 2px;
   height: 34px;
-  padding: 0 8px 0 calc(var(--lkt-tabs-inset, 0px) + 8px);
+  padding: 0 calc(var(--lkt-tabs-right, 0px) + 8px) 0 8px;
   overflow-x: auto;
   overflow-y: hidden;
   background: #0e0f0f;
@@ -314,7 +328,10 @@
 
 /* Reading time, at the right of the breadcrumbs. */
 .lkt-reading-time {
+  flex: none;
   margin-left: auto;
+  padding-left: 16px;
+  align-self: center;
   color: hsl(var(--muted-foreground));
   font-size: 12px;
   font-variant-numeric: tabular-nums;
@@ -525,4 +542,154 @@
 .lkt-btn:disabled {
   cursor: default;
   opacity: 0.45;
+}
+
+/* Recent pages as faint "suggested" tabs after the open ones. Overflow is clipped. */
+.lkt-ghosts {
+  display: flex;
+  flex: 1 1 0;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  margin-left: 6px;
+  padding-left: 8px;
+  overflow: hidden;
+  border-left: 1px solid rgb(255 255 255 / 0.08);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+.lkt-tab-ghost {
+  flex: none;
+  max-width: 160px;
+  min-width: 0;
+  color: #71717a;
+  opacity: 0.75;
+}
+.lkt-tab-ghost .lkt-ic {
+  opacity: 0.55;
+}
+.lkt-tab-ghost:hover {
+  background: rgb(255 255 255 / 0.04);
+  color: #d4d4d8;
+  opacity: 1;
+}
+
+/* Recent pages at the bottom of the Project Browser. */
+.lkt-recent.lkt-recent-bottom {
+  flex: none;
+  padding: 8px 8px 6px;
+  border-top: 1px solid hsl(var(--border));
+}
+
+/* "Recents" tab in the Project Browser. While it's open, hide LegendKeeper's tab panels and
+   dim its active tab. */
+div:has(> .lkt-recents-panel:not([hidden])) > [role="tabpanel"] {
+  display: none !important;
+}
+[role="tablist"]:has(> .lkt-recents-trigger[data-state="active"]) > [role="tab"][data-state="active"]:not(.lkt-recents-trigger) {
+  color: hsl(var(--muted-foreground));
+}
+.lkt-recents-trigger[data-state="active"] {
+  color: hsl(var(--primary));
+}
+.lkt-recents-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 4px 8px 8px;
+}
+.lkt-recents-panel[hidden] {
+  display: none;
+}
+.lkt-recents-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px 8px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.lkt-recents-clear {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.lkt-recents-clear:hover {
+  background: hsl(var(--foreground) / 0.08);
+  color: hsl(var(--foreground));
+}
+.lkt-recents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+}
+.lkt-recents-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: hsl(var(--foreground) / 0.8);
+  text-decoration: none;
+}
+.lkt-recents-item:hover {
+  background: hsl(var(--foreground) / 0.07);
+  color: hsl(var(--foreground));
+}
+.lkt-recents-item .lkt-ic {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+}
+.lkt-recents-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lkt-recents-name,
+.lkt-recents-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lkt-recents-name {
+  font-size: 13px;
+}
+.lkt-recents-path {
+  color: hsl(var(--muted-foreground));
+  font-size: 11.5px;
+}
+.lkt-recents-empty {
+  margin: 4px 8px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12.5px;
+}
+
+/* Content block drag handle size. LegendKeeper positions the handle with left/top, so scaling
+   it from its right edge (next to the block) leaves its placement alone. */
+html[data-lkt-handle="0"] .lk-tier-grabber {
+  transform: scale(0.8);
+  transform-origin: right center;
+}
+html[data-lkt-handle="2"] .lk-tier-grabber {
+  transform: scale(1.3);
+  transform-origin: right center;
+}
+html[data-lkt-handle="3"] .lk-tier-grabber {
+  transform: scale(1.6);
+  transform-origin: right center;
 }

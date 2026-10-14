@@ -52,6 +52,9 @@
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
+    recentPlacement: "filter", // "filter" | "bottom" | "tabs"
+    recentTab: false,
+    blockHandleSize: 1, // 0 small, 1 standard, 2 large, 3 larger
   };
   function settings() {
     try {
@@ -604,7 +607,7 @@
   // ---------------------------------------------------------------------------------------------
   // Feature: recent pages (local history, per project)
   // ---------------------------------------------------------------------------------------------
-  const RECENT_MAX = 12;
+  const RECENT_MAX = 30;
   const recentKey = () => (projectId() ? `lkt:recent:${projectId()}` : null);
   let lastTracked = null;
   function trackRecent() {
@@ -618,7 +621,7 @@
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Sidebar rows we own (tag shortcuts, recent pages)
+  // Project Browser rows we own (tag shortcuts, recent pages)
   // ---------------------------------------------------------------------------------------------
   const rows = {};
   function ownRow(name, area) {
@@ -645,9 +648,20 @@
 
   function renderTagShortcuts(area) {
     const s = settings();
-    if (!s.tagShortcuts) return hideRow("tag-shortcuts");
+    if (!s.tagShortcuts) {
+      setStyle("pinned-pills", "");
+      return hideRow("tag-shortcuts");
+    }
     const row = ownRow("tag-shortcuts", area);
     const list = loadShortcuts();
+    // A pinned tag that's active already shows as selected here, so hide LegendKeeper's duplicate
+    // pill for it under the filter box. Pills for other tags stay.
+    setStyle(
+      "pinned-pills",
+      list.length
+        ? `${list.map((t) => `div.rounded-full[data-lkt-tag=${cssString(t)}]`).join(",\n")}{display:none!important}`
+        : "",
+    );
     const active = new Set(tagFilter.tags || []);
     const counts = s.tagCounts ? tagCounts() : null;
     const sig = JSON.stringify([list, [...active], !!draggingTag, counts && list.map((t) => counts.get(t) || 0)]);
@@ -682,17 +696,28 @@
     });
   }
 
-  function renderRecent(area) {
-    if (!settings().recentPages) return hideRow("recent");
+  // Recent pages, newest first, excluding the current page.
+  function recentPages(limit = RECENT_MAX) {
     const key = recentKey();
-    const pid = projectId();
     const current = currentResourceId();
-    const items = (key ? loadJSON(key, []) : [])
+    return (key ? loadJSON(key, []) : [])
       .filter((id) => id !== current)
       .map((id) => ({ id, r: getResource(id) }))
       .filter(({ r }) => r && !r.deletedAt && r.name)
-      .slice(0, 6);
-    const row = ownRow("recent", area);
+      .slice(0, limit);
+  }
+
+  // Where the Recent row goes: under the filter box ("filter"), at the bottom of the Project
+  // Browser ("bottom"), or as suggested tabs in the tab bar ("tabs", drawn by features/tabs.js).
+  function renderRecent(area) {
+    const s = settings();
+    const placement = s.recentPlacement === "bottom" || (s.recentPlacement === "tabs" && s.tabs) ? s.recentPlacement : "filter";
+    if (!s.recentPages || placement === "tabs") return hideRow("recent");
+    const pid = projectId();
+    const items = recentPages(6);
+    const host = placement === "bottom" ? area.parentElement : area;
+    const row = ownRow("recent", host);
+    row.classList.toggle("lkt-recent-bottom", placement === "bottom");
     row.hidden = !items.length;
     const sig = JSON.stringify(items.map(({ id, r }) => [id, r.name, r.iconGlyph]));
     setRowContent(row, sig, (row) => {
@@ -892,6 +917,9 @@
       renderTagShortcuts(area);
       renderRecent(area);
     }
+    // Content block handle size (CSS in tweaks.css keys off this attribute).
+    const handle = String(settings().blockHandleSize ?? 1);
+    if (document.documentElement.dataset.lktHandle !== handle) document.documentElement.dataset.lktHandle = handle;
     markTagSources(document);
     renderCoverStyles();
     for (const fn of renderHooks) {
@@ -938,6 +966,7 @@
     setStyle,
     cssString,
     glyphClass,
+    recentPages,
   };
 
   const start = () => {

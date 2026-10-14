@@ -1,6 +1,6 @@
 // LegendKeeper Tweaks — small page extras:
-//   - cover preview when hovering a page in the sidebar tree (off by default)
-//   - reading time next to the breadcrumbs on longer pages
+//   - cover preview when hovering a page in the Project Browser (off by default)
+//   - reading time at the end of the page title row on longer pages
 (() => {
   "use strict";
   const LKT = window.__LKT;
@@ -72,15 +72,16 @@
     return null;
   }
 
+  // Sits at the right end of the page title row, clear of the page menu buttons above it.
   function renderReadingTime() {
-    const crumbs = document.querySelector('[data-insp-path*="ResourceBreadcrumbs/index.tsx"]');
+    const titleRow = document.querySelector('.resource-view-wrapper [data-insp-path*="ResourceTitle/index.tsx"].resource-title');
     const pm = settings().readingTime ? mainEditor() : null;
     // Counting words is cheap, but don't do it more than once a second.
     const now = Date.now();
-    if (pm && now - lastCount < 1000 && badge?.isConnected && badge.parentElement === crumbs) return;
+    if (pm && now - lastCount < 1000 && badge?.isConnected && badge.parentElement === titleRow) return;
     lastCount = now;
     const words = pm ? (pm.innerText.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) || []).length : 0;
-    if (!crumbs || words < MIN_WORDS) {
+    if (!titleRow || words < MIN_WORDS) {
       badge?.remove();
       return;
     }
@@ -92,7 +93,7 @@
     const minutes = Math.max(1, Math.round(words / WORDS_PER_MINUTE));
     const text = `${minutes} min read · ${words.toLocaleString()} words`;
     if (badge.textContent !== text) badge.textContent = text;
-    if (badge.parentElement !== crumbs) crumbs.append(badge);
+    if (badge.parentElement !== titleRow) titleRow.append(badge);
   }
 
   LKT.onRender(renderReadingTime);
