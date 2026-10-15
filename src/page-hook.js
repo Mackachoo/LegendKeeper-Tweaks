@@ -812,14 +812,14 @@
 
   // [image url, banner url, crop]. The crop is how the page shows the image in its sidebar:
   // { o: origin, s: scale, a: frame height / width } (a is null when LegendKeeper didn't store it).
-  const SIDEBAR_IMAGE_WIDTH = 272;
   function imagesOf(r) {
     const d = r.cover && r.cover.data;
     const img = (d && d.url) || r.imageUrl || "";
     const banner = (r.banner && r.banner.enabled && r.banner.url) || "";
     let crop = null;
     if (d && d.url) {
-      crop = { o: d.origin || null, s: d.scale || 1, a: d.displayAspectRatio || (d.height ? d.height / SIDEBAR_IMAGE_WIDTH : null) };
+      // Without a stored displayAspectRatio, LegendKeeper frames the image in its own shape.
+      crop = { o: d.origin || null, s: d.scale || 1, a: d.displayAspectRatio || null };
     } else if (r.imageUrl) {
       crop = { o: r.imageOrigin || null, s: r.imageScale || 1, a: null };
     }
@@ -861,7 +861,7 @@
     const pid = projectId();
     const key = coverKey();
     if (!pid || !key || prefetching === pid || !adapter || typeof adapter.getResourcesByIds !== "function") return;
-    const doneKey = `lkt:covers-fetched-v2:${pid}`; // v2: entries now include the crop
+    const doneKey = `lkt:covers-fetched-v3:${pid}`; // v3: entries include the crop (fixed frame shape)
     try {
       if (sessionStorage.getItem(doneKey)) return;
     } catch {}

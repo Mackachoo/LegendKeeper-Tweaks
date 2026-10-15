@@ -37,11 +37,22 @@
     const nw = img.naturalWidth, nh = img.naturalHeight;
     if (!nw || !nh) return;
     // Same shape as the page's sidebar image frame; fall back to the image's own shape.
-    const aspect = Math.min(1.3, Math.max(0.45, info.crop?.a || nh / nw));
+    const aspect = Math.min(1.8, Math.max(0.45, info.crop?.a || nh / nw));
     const h = Math.round(CARD_W * aspect);
     frame.style.height = `${h}px`;
     const l = cropLayout(nw, nh, CARD_W, h, info.crop?.s, info.crop?.o);
     Object.assign(img.style, { width: `${l.dw}px`, height: `${l.dh}px`, left: `${l.x}px`, top: `${l.y}px` });
+    placeCard();
+  }
+
+  // Next to the hovered row, kept fully on screen.
+  let anchor = null;
+  function placeCard() {
+    if (!card || !anchor) return;
+    const r = anchor.getBoundingClientRect();
+    const h = card.offsetHeight || 260;
+    card.style.left = `${Math.round(r.right + 12)}px`;
+    card.style.top = `${Math.round(Math.max(8, Math.min(r.top - 40, window.innerHeight - h - 8)))}px`;
   }
 
   function showCard(row) {
@@ -63,10 +74,8 @@
     if (img.getAttribute("src") !== info.url) img.src = info.url;
     else layoutCard(info);
     name.textContent = getResource(id)?.name || "";
-    const r = row.getBoundingClientRect();
-    const top = Math.min(Math.max(8, r.top - 40), window.innerHeight - 330);
-    card.style.left = `${Math.round(r.right + 12)}px`;
-    card.style.top = `${Math.round(top)}px`;
+    anchor = row;
+    placeCard();
     card.classList.add("lkt-show");
   }
   function hideCard() {
