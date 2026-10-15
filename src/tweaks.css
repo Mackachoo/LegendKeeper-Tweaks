@@ -840,3 +840,21 @@ html[data-lkt-handle] .lk-tier-grabber {
 .lkt-tag-shortcut.lkt-confirming .lkt-count {
   display: none;
 }
+
+/* Block type picker in the Set for subpages dialog. */
+.lkt-select {
+  flex: none;
+  width: 150px;
+  appearance: auto;
+  font: 12.5px/1 inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+.lkt-check.lkt-indent {
+  padding-left: 12px;
+  font-size: 12.5px;
+}
+.lkt-check[hidden],
+.lkt-setting[hidden] {
+  display: none;
+}

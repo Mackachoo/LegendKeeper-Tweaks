@@ -115,6 +115,17 @@
     { key: "sidebarFixed", label: "Sidebar scrolling", hint: "Keep the sidebar in place while the page scrolls" },
   ];
 
+  // Sidebar block types, with the title and data LegendKeeper's own "Add Block" gives them.
+  const BLOCKS = [
+    ["TAGS", "Tags", {}],
+    ["IMAGE", "Image", {}],
+    ["KEY_VALUE", "Properties", { rows: [], align: "left", showIcons: true }],
+    ["TEXT_FIELD", "Text", {}],
+    ["ALIAS", "Aliases", {}],
+    ["MENTION", "Backlinks", {}],
+    ["RESOURCE_COLLECTION", "Collection", { items: [], view: "list" }],
+  ];
+
   let dialog = null;
 
   function el(tag, props = {}, ...children) {
@@ -209,6 +220,46 @@
       el("div", { className: "lkt-setting lkt-indent", dataset: { when: "colour" } }, colour, el("small", { textContent: "Pick a colour" })),
     );
 
+    // Sidebar blocks: add one to every page, or remove blocks by title.
+    body.append(el("h3", { textContent: "Sidebar blocks" }));
+    const blockType = el("select", { className: "lkt-input lkt-select" });
+    blockType.append(el("option", { value: "", textContent: "Don't add" }));
+    for (const [type, title] of BLOCKS) blockType.append(el("option", { value: type, textContent: title }));
+    const blockTitle = el("input", { type: "text", className: "lkt-input", placeholder: "Block title", spellcheck: false });
+    const skipExisting = el("input", { type: "checkbox", checked: true, id: "lkt-skip-existing" });
+    blockType.addEventListener("change", () => {
+      const def = BLOCKS.find(([t]) => t === blockType.value);
+      blockTitle.value = def ? def[1] : "";
+    });
+    const removeTitle = el("input", { type: "text", className: "lkt-input", placeholder: "e.g. Facts", spellcheck: false });
+    body.append(
+      el(
+        "div",
+        { className: "lkt-setting" },
+        el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Add a block" }), el("small", { textContent: "Added to each page's sidebar" })),
+        blockType,
+      ),
+      el("div", { className: "lkt-setting lkt-indent", dataset: { whenBlock: "1" } }, blockTitle),
+      el(
+        "label",
+        { className: "lkt-check lkt-indent", htmlFor: "lkt-skip-existing", dataset: { whenBlock: "1" } },
+        skipExisting,
+        el("span", { textContent: "Skip pages that already have a block of this type" }),
+      ),
+      el(
+        "div",
+        { className: "lkt-setting" },
+        el(
+          "div",
+          { className: "lkt-setting-text" },
+          el("span", { textContent: "Remove blocks titled" }),
+          el("small", { textContent: "Matches the title, ignoring case. Deletes the block and its contents." }),
+        ),
+      ),
+      el("div", { className: "lkt-setting lkt-indent" }, removeTitle),
+    );
+    const blockInputs = { blockType, blockTitle, skipExisting, removeTitle };
+
     const status = el("div", { className: "lkt-dialog-status" });
     const cancel = el("button", { type: "button", className: "lkt-btn", textContent: "Cancel" });
     const apply = el("button", { type: "submit", className: "lkt-btn lkt-btn-primary", textContent: "Apply" });
@@ -216,25 +267,48 @@
 
     form.append(header, body, footer);
 
+    // A plan that deletes blocks needs a second click; any edit resets that.
+    let pendingPlan = null;
     const refresh = () => {
       for (const row of body.querySelectorAll("[data-when]")) row.hidden = valueOf(form, row.dataset.when) !== "set";
+      for (const row of body.querySelectorAll("[data-when-block]")) row.hidden = !blockType.value;
       updatePreview();
+      pendingPlan = null;
+      status.textContent = "";
+      status.classList.remove("lkt-error");
       const n = subs.length + (includeRoot.checked ? 1 : 0);
-      const changes = collectChanges(form, glyph, colour);
+      const changes = collectChanges(form, glyph, colour, blockInputs);
       apply.disabled = !Object.keys(changes).length || !n;
       apply.textContent = `Apply to ${n} page${n === 1 ? "" : "s"}`;
     };
     form.addEventListener("change", refresh);
-    glyph.addEventListener("input", refresh);
+    form.addEventListener("input", refresh);
     cancel.addEventListener("click", () => !form.dataset.busy && closeDialog());
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const changes = collectChanges(form, glyph, colour);
+      const changes = collectChanges(form, glyph, colour, blockInputs);
       const ids = (includeRoot.checked ? [rootId] : []).concat(subs);
+      const controls = [...form.querySelectorAll("input, button, select")];
       form.dataset.busy = "1";
-      for (const c of form.querySelectorAll("input, button")) c.disabled = true;
+      for (const c of controls) c.disabled = true;
       try {
-        const result = await applyChanges(ids, changes, (done, total) => {
+        let plan = pendingPlan;
+        if (!plan) {
+          status.textContent = "Checking pages…";
+          plan = await planChanges(ids, changes);
+          if (plan.removedBlocks) {
+            // Deleting blocks loses their contents: show exactly what will go and ask again.
+            pendingPlan = plan;
+            status.textContent = `This deletes ${plan.removedBlocks} block${plan.removedBlocks === 1 ? "" : "s"} titled “${changes.removeTitle}” on ${plan.removedPages} page${plan.removedPages === 1 ? "" : "s"}, including their contents.`;
+            status.classList.add("lkt-error");
+            apply.textContent = `Delete ${plan.removedBlocks} and apply`;
+            delete form.dataset.busy;
+            for (const c of controls) c.disabled = false;
+            return;
+          }
+        }
+        status.classList.remove("lkt-error");
+        const result = await runTasks(plan.tasks, (done, total) => {
           status.textContent = `Updating… ${done} / ${total}`;
         });
         status.textContent = result.failed
@@ -247,6 +321,7 @@
         status.classList.add("lkt-error");
       }
       delete form.dataset.busy;
+      pendingPlan = null;
       cancel.disabled = false;
       cancel.textContent = "Close";
       apply.hidden = true;
@@ -274,7 +349,7 @@
     document.removeEventListener("keydown", onKey, true);
   }
 
-  function collectChanges(form, glyph, colour) {
+  function collectChanges(form, glyph, colour, blocks) {
     const changes = {};
     for (const s of SETTINGS) {
       if (!s.key) continue;
@@ -285,11 +360,21 @@
     const name = iconName(glyph.value);
     if (valueOf(form, "icon") === "set" && /^[a-z0-9-]+$/.test(name)) changes.iconGlyph = name;
     if (valueOf(form, "colour") === "set") changes.iconColor = colour.value.toUpperCase();
+    if (blocks && blocks.blockType.value) {
+      const def = BLOCKS.find(([t]) => t === blocks.blockType.value);
+      changes.addBlock = {
+        type: def[0],
+        title: blocks.blockTitle.value.trim() || def[1],
+        data: def[2],
+        skipExisting: blocks.skipExisting.checked,
+      };
+    }
+    if (blocks && blocks.removeTitle.value.trim()) changes.removeTitle = blocks.removeTitle.value.trim();
     return changes;
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Applying — same functions LegendKeeper's page menu calls
+  // Applying — same functions LegendKeeper's page menu and Add Block call
   // ---------------------------------------------------------------------------------------------
   const DOC_TYPES = {
     fullWidth: ["page", "collection"],
@@ -299,13 +384,14 @@
 
   // Current settings and tabs for every page. Fully loaded pages come from the store; the rest
   // from LegendKeeper's own read-only batch loader (the one it uses for link previews).
-  async function detailsFor(adapter, store, ids) {
+  // With needBlocks, every page is fetched so its sidebar blocks (properties) are included.
+  async function detailsFor(adapter, store, ids, needBlocks = false) {
     const details = new Map();
     const missing = [];
     for (const id of ids) {
       const r = store.resources.get(id);
       const docs = (r?.documentIds || []).map((d) => store.documents.get(d)).filter(Boolean);
-      if (r && r.hydrationLevel && r.hydrationLevel !== "index" && docs.length === r.documentIds.length) {
+      if (!needBlocks && r && r.hydrationLevel && r.hydrationLevel !== "index" && docs.length === r.documentIds.length) {
         details.set(id, { ...r, documents: docs });
       } else {
         missing.push(id);
@@ -318,12 +404,15 @@
     return details;
   }
 
-  async function applyChanges(ids, changes, onProgress) {
+  async function planChanges(ids, changes) {
     const adapter = LKT.adapter();
     const store = LKT.store();
     if (!adapter || !store) throw new Error("LegendKeeper isn't ready yet — reload the page and try again.");
 
-    const details = await detailsFor(adapter, store, ids);
+    const needBlocks = !!(changes.addBlock || changes.removeTitle);
+    const details = await detailsFor(adapter, store, ids, needBlocks);
+    let removedBlocks = 0;
+    const removedPages = new Set();
 
     // One task per actual change.
     const tasks = [];
@@ -347,6 +436,24 @@
         if (colour) patch.iconColor = colour;
         tasks.push([id, () => adapter.updateResourceIcon(id, glyph, colour, undefined), () => store.updateResource(id, patch)]);
       }
+      if (needBlocks) {
+        const blocks = Array.isArray(r.properties) ? r.properties : [];
+        if (changes.removeTitle) {
+          const want = changes.removeTitle.toLowerCase();
+          for (const b of blocks) {
+            if (b && b.id && (b.title || "").trim().toLowerCase() === want) {
+              tasks.push([id, () => adapter.removeProperty(id, b.id), () => {}]);
+              removedBlocks++;
+              removedPages.add(id);
+            }
+          }
+        }
+        const add = changes.addBlock;
+        if (add && !(add.skipExisting && blocks.some((b) => b && b.type === add.type))) {
+          const data = JSON.parse(JSON.stringify(add.data));
+          tasks.push([id, () => adapter.addProperty(id, { type: add.type, title: add.title, data }), () => {}]);
+        }
+      }
       for (const d of r.documents || []) {
         if (!d || d.deletedAt) continue;
         const local = (patch) => () => store.documents.has(d.id) && store.updateDocument(d.id, patch);
@@ -363,6 +470,10 @@
       }
     }
 
+    return { tasks, removedBlocks, removedPages: removedPages.size };
+  }
+
+  async function runTasks(tasks, onProgress) {
     let done = 0;
     let failed = 0;
     const touched = new Set();
