@@ -37,7 +37,7 @@ Everything here is about usability: making LegendKeeper easier and quicker to ge
 | --- | --- |
 | Layout | Full-width, Table of contents |
 | Access | Lock, Hide |
-| Sidebar | Show property bar, Sidebar scrolling |
+| Sidebar | Show sidebar by default, Sidebar scrolling |
 | Icon | Icon (Font Awesome name, e.g. `dragon`) and icon colour (shown on map pins and in collection lists) |
 | Sidebar blocks | Add a block (Tags, Image, Properties, Text, Aliases, Backlinks or Collection) to every page's sidebar, optionally skipping pages that already have one; remove every block with a given title (e.g. "Facts") |
 
@@ -219,6 +219,17 @@ When you open a pull request:
 - Keep LegendKeeper working if your change stops matching. Patches should fail safe the way the existing ones do (see [How it works](#how-it-works)).
 - Add a setting for anything that changes how LegendKeeper looks or behaves, so people can turn it off.
 - Bump the version in `manifest.json`.
+
+### Releasing
+
+Pushing to `main` doesn't publish anything. To release to the Chrome Web Store, bump `version` in `manifest.json`, then push a matching tag:
+
+```sh
+git tag v0.8.9
+git push origin v0.8.9
+```
+
+The deploy workflow checks the tag matches the manifest version, packages the extension and publishes it. It can also be run by hand from the Actions tab.
 
 ## Disclaimer
 

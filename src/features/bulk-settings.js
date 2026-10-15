@@ -111,7 +111,7 @@
     { key: "locked", label: "Lock", hint: "Prevent editing" },
     { key: "hidden", label: "Hide", hint: "Hidden from players" },
     { section: "Sidebar" },
-    { key: "propertyBar", label: "Show property bar" },
+    { key: "propertyBar", label: "Show sidebar by default", hint: "Page sidebar open when the page loads" },
     { key: "sidebarFixed", label: "Sidebar scrolling", hint: "Keep the sidebar in place while the page scrolls" },
   ];
 

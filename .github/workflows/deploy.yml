@@ -1,20 +1,19 @@
 name: Deploy to Chrome Web Store
 
-# Publishes the extension when the version in manifest.json changes on main.
-# Pushes that don't touch manifest.json don't run this at all; pushes that touch it
-# without changing "version" stop at the version check.
+# Publishes the extension when you push a version tag, e.g.:
+#   git tag v0.8.9 && git push origin v0.8.9
+# The tag must match "version" in manifest.json. Pushes to main don't publish.
 on:
   push:
-    branches: [main]
-    paths: [manifest.json]
-  workflow_dispatch: # manual run: publishes the current version if it hasn't been released
+    tags: ["v*"]
+  workflow_dispatch: # manual run from the Actions tab: publishes the current manifest version
 
 concurrency:
   group: deploy
   cancel-in-progress: false
 
 permissions:
-  contents: write # to push the release tag
+  contents: read
 
 jobs:
   deploy:
@@ -26,33 +25,22 @@ jobs:
       EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # need the previous commit's manifest and the tags
 
-      # Release only when manifest.json's version differs from the previous commit (on push)
-      # and hasn't been released (tagged) before. The store rejects versions it has seen.
+      # A tag must match manifest.json's version, so the store gets the version the tag says.
       - name: Check version
         id: version
         env:
-          BEFORE: ${{ github.event.before }}
-          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           version=$(jq -r .version manifest.json)
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          release=true
-          if [ "$EVENT" = "push" ] && [ -n "$BEFORE" ] && git cat-file -e "$BEFORE:manifest.json" 2>/dev/null; then
-            previous=$(git show "$BEFORE:manifest.json" | jq -r .version)
-            if [ "$previous" = "$version" ]; then
-              echo "Version unchanged ($version); nothing to publish."
-              release=false
-            fi
+          if [ "$REF_TYPE" = "tag" ] && [ "$REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $REF_NAME doesn't match manifest.json version $version. Tag v$version instead."
+            exit 1
           fi
-          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
-            echo "v$version is already released; bump the version in manifest.json to publish."
-            release=false
-          fi
-          echo "release=$release" >> "$GITHUB_OUTPUT"
-          if [ "$release" = true ]; then echo "Publishing v$version."; fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
+          echo "Publishing v$version."
 
       - name: Check extension
         if: steps.version.outputs.release == 'true'
@@ -134,9 +122,3 @@ jobs:
             "$CWS_API/v2/publishers/$PUBLISHER_ID/items/$EXTENSION_ID:publish") \
             || { echo "::error::Publish request failed: $(tr -s '\n' ' ' <<<"$res")"; exit 1; }
           echo "$res"
-
-      - name: Tag release
-        if: steps.version.outputs.release == 'true'
-        run: |
-          git tag "v${{ steps.version.outputs.version }}"
-          git push origin "v${{ steps.version.outputs.version }}"
