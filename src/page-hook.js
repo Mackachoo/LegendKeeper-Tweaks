@@ -929,7 +929,7 @@
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Feature: Expand all / Collapse all buttons in the Project Browser filter row
+  // Feature: Expand all / Collapse all buttons in the Project Browser filter row (before the filter icon)
   // ---------------------------------------------------------------------------------------------
   const tree = { expand: null, collapse: null };
   LKT.bindTree = (expand, collapse) => {
@@ -970,7 +970,10 @@
         treeButtons.append(b);
       }
     }
-    if (treeButtons.parentElement !== box) box.append(treeButtons);
+    // Sit between the search box and LegendKeeper's filter icon, so the icon (and the tag filter
+    // popover anchored to it) stays at the right edge where it was.
+    const input = box.querySelector(":scope > input");
+    if (input && input.nextElementSibling !== treeButtons) input.after(treeButtons);
   }
 
   // ---------------------------------------------------------------------------------------------

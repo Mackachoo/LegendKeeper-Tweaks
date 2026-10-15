@@ -796,12 +796,13 @@ html[data-lkt-handle] .lk-tier-grabber {
   max-width: 220px;
 }
 
-/* Expand all / Collapse all, next to the filter icon in the Project Browser filter row. */
+/* Expand all / Collapse all, between the search box and the filter icon in the Project Browser
+   filter row. */
 .lkt-tree-buttons {
   display: flex;
   flex: none;
   gap: 2px;
-  margin-left: 2px;
+  margin-left: 4px;
 }
 .lkt-tree-button {
   display: grid;
