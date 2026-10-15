@@ -16,6 +16,8 @@
 //      subpages" to read page tabs and to call the same update functions LegendKeeper's own page
 //      menu calls.
 //   6. expose-tree-expand: hands us the tree's own Expand all / Collapse all (filter-row buttons).
+//   7. nested-filter-drag: lets you drag pages to move them while the nested filter is on (LegendKeeper
+//      disables tree dragging while filtering, which made drops there misbehave).
 //
 // Everything else is additive DOM/CSS on top of the React app. The only LegendKeeper data we
 // ever write is through "Apply settings to subpages", an explicit, confirmed action that uses
@@ -128,6 +130,16 @@
       re: /(wiki-tree-expand-state:\$\{\w+\}`,reducer:\w+\}\),)(\w+)(=\(0,\w+\.useAdapterOrNull\)\(\))/,
       replace: (m, pre, adapter, post) =>
         `${pre}${adapter}${post},__lktAdapterBind=window.__LKT&&window.__LKT.bindAdapter(${adapter})`,
+    },
+    {
+      name: "nested-filter-drag",
+      // In the Project Browser tree: dragEnabled:p&&!f — LegendKeeper switches tree dragging off while
+      // filtering, but the rows stay draggable, so drops there act on stale positions and can move
+      // the wrong page. The nested filter shows the real tree, so turn dragging back on for it.
+      gate: /ResourceTree\/index\.tsx:\d+:\d+:ContextMenu"/,
+      re: /dragEnabled:(\w+)&&!(\w+),draggableContainerClass:/,
+      replace: (m, canDrag, isFiltering) =>
+        `dragEnabled:${canDrag}&&(!${isFiltering}||!!(window.__LKT&&window.__LKT.nestActive)),draggableContainerClass:`,
     },
     {
       name: "expose-tree-expand",
