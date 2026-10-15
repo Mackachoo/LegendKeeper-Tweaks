@@ -211,9 +211,11 @@ div:has(> .lkt-tabs) .resource-view-wrapper [data-insp-path*="components/Sidebar
   top: var(--lkt-tabs-bottom, 97px) !important;
   height: calc(100vh - var(--lkt-tabs-bottom, 97px)) !important;
 }
-/* The page column's height is set inline to the window minus the top bar, which would push maps'
-   and boards' bottom toolbars off-screen by the tab strip's height. */
-div:has(> .lkt-tabs) .resource-view-wrapper [data-insp-path*="ResourceView/index.tsx"][style*="100vh"] {
+/* On maps and boards the page column's height is set inline to the window minus the top bar,
+   which would push their bottom toolbars off-screen by the tab strip's height. Only match a real
+   "height:" (pages use "min-height:", which must stay as is so long pages scroll). */
+div:has(> .lkt-tabs) .resource-view-wrapper [data-insp-path*="ResourceView/index.tsx"][style^="height:"],
+div:has(> .lkt-tabs) .resource-view-wrapper [data-insp-path*="ResourceView/index.tsx"][style*="; height:"] {
   height: calc(100vh - var(--lkt-tabs-bottom, 97px)) !important;
 }
 /* LegendKeeper's sticky page header and page menu buttons are fixed under the top bar. */
