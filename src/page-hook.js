@@ -353,22 +353,33 @@
     }
     LKT.nestActive = true;
     const items = base.items;
-    const matched = new Set(matches);
+    // If a pinned page in LegendKeeper's shortcut bar is selected, show only matches inside it,
+    // as the unfiltered tree does. (LegendKeeper's own filter ignores it.)
+    const top = shortcutRoot && items[shortcutRoot] ? shortcutRoot : "root";
+    const inside = (id) => {
+      if (top === "root") return true;
+      for (let cur = items[id] && items[id].parentId, n = 0; cur && n < 200; cur = items[cur] && items[cur].parentId, n++) {
+        if (cur === top) return true;
+      }
+      return false;
+    };
+    const matched = new Set(matches.filter(inside));
     const keep = new Set();
-    for (const id of matches) {
+    for (const id of matched) {
       let cur = id;
-      while (cur && cur !== "root" && !keep.has(cur)) {
+      while (cur && cur !== "root" && cur !== top && !keep.has(cur)) {
         keep.add(cur);
         cur = items[cur] && items[cur].parentId;
         if (cur && cur !== "root" && !items[cur]) break; // parent not loaded / not in tree
       }
     }
 
-    const rootChildren = ((items.root && items.root.children) || []).filter((id) => keep.has(id));
+    const rootChildren = ((items[top] && items[top].children) || []).filter((id) => keep.has(id));
     const onRoot = new Set(rootChildren);
     for (const id of keep) {
       const p = items[id] && items[id].parentId;
-      if ((!p || p === "root" || !items[p]) && !onRoot.has(id)) {
+      const atTop = top === "root" ? !p || p === "root" || !items[p] : p === top;
+      if (atTop && !onRoot.has(id)) {
         rootChildren.push(id);
         onRoot.add(id);
       }
@@ -438,7 +449,7 @@
     }
     return 0;
   };
-  // With "Separate pins per pinned page" on, each pinned page has its own tag pins; "all pages"
+  // With "Pinned page specific tags" on, each pinned page has its own tag pins; "all pages"
   // keeps the project's original set.
   const shortcutsKey = () => {
     const pid = projectId();

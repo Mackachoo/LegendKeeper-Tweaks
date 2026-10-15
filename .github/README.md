@@ -60,12 +60,12 @@ LegendKeeper's left-hand panel (Project / Templates / Assets). "Sidebar" in Lege
 - Shift-click or ⌘-click to combine several tags.
 - Drag pinned tags to reorder them. Hover and click **×** to unpin.
 - Each pinned tag shows how many pages carry it (can be switched off).
-- **Separate pins per pinned page** (off by default): each pinned page in LegendKeeper's shortcut bar gets its own pinned tags. Clicking that shortcut switches to its tags; just visiting the page doesn't. With no pinned page selected you get your original pins.
+- **Pinned page specific tags** (off by default): each pinned page in LegendKeeper's shortcut bar gets its own pinned tags. Clicking that shortcut switches to its tags; just visiting the page doesn't. With no pinned page selected you get your original pins.
 - When a pinned tag is active, LegendKeeper's duplicate tag pill under the filter box is hidden; the pinned tag shows as selected instead.
 
 Pins are saved per project, in this browser only.
 
-**Keep tree when filtering.** Normally, filtering by tag or name flattens the Project Browser into an alphabetical list. With this on, matching pages stay where they are in the hierarchy. The parent pages needed to reach them are shown greyed out, and you can still click them. Folders keep the open/closed state you had, and you can open and close them as normal while filtering; a greyed-out folder means there are matches inside.
+**Keep tree when filtering.** If a pinned page is selected in LegendKeeper's shortcut bar, only matches inside it are shown, as in the unfiltered tree. Normally, filtering by tag or name flattens the Project Browser into an alphabetical list. With this on, matching pages stay where they are in the hierarchy. The parent pages needed to reach them are shown greyed out, and you can still click them. Folders keep the open/closed state you had, and you can open and close them as normal while filtering; a greyed-out folder means there are matches inside.
 
 **Keep tag filter after reload.** The tags you've filtered by stay selected when you reload or come back to the project.
 
