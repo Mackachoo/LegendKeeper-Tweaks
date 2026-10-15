@@ -795,3 +795,27 @@ html[data-lkt-handle] .lk-tier-grabber {
   min-width: 0;
   max-width: 220px;
 }
+
+/* Expand all / Collapse all, next to the filter icon in the Project Browser filter row. */
+.lkt-tree-buttons {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin-left: 2px;
+}
+.lkt-tree-button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: none;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms;
+}
+.lkt-tree-button:hover {
+  background: hsl(var(--foreground) / 0.08);
+  color: hsl(var(--foreground));
+}

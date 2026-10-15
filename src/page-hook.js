@@ -15,6 +15,7 @@
 //   5. expose-adapter: hands us LegendKeeper's data adapter, used only by "Apply settings to
 //      subpages" to read page tabs and to call the same update functions LegendKeeper's own page
 //      menu calls.
+//   6. expose-tree-expand: hands us the tree's own Expand all / Collapse all (filter-row buttons).
 //
 // Everything else is additive DOM/CSS on top of the React app. The only LegendKeeper data we
 // ever write is through "Apply settings to subpages", an explicit, confirmed action that uses
@@ -59,6 +60,7 @@
     suggestTab: false,
     blockHandleScale: 1, // multiplier for content block drag handles
     tabsFitWidth: true,
+    treeExpandButtons: true,
     tabStyle: "pills",
   };
   function settings() {
@@ -127,6 +129,15 @@
       replace: (m, pre, adapter, post) =>
         `${pre}${adapter}${post},__lktAdapterBind=window.__LKT&&window.__LKT.bindAdapter(${adapter})`,
     },
+    {
+      name: "expose-tree-expand",
+      // In the Project Browser tree: ({...,expandAll:O,collapseAll:P,prefetchChildren:...}) — the same
+      // functions as LegendKeeper's own right-click "Expand all" / "Collapse all".
+      gate: /expandAll:\w+,collapseAll:\w+,prefetchChildren:/,
+      re: /expandAll:(\w+),collapseAll:(\w+),prefetchChildren:/,
+      replace: (m, expand, collapse) =>
+        `expandAll:(window.__LKT&&window.__LKT.bindTree(${expand},${collapse}),${expand}),collapseAll:${collapse},prefetchChildren:`,
+    },
   ];
 
   function patchFactory(fn) {
@@ -136,7 +147,7 @@
     } catch {
       return fn;
     }
-    const relevant = PATCHES.filter((p) => src.includes(p.gate));
+    const relevant = PATCHES.filter((p) => (typeof p.gate === "string" ? src.includes(p.gate) : p.gate.test(src)));
     if (!relevant.length) return fn;
 
     let out = src;
@@ -918,6 +929,51 @@
   }
 
   // ---------------------------------------------------------------------------------------------
+  // Feature: Expand all / Collapse all buttons in the Project Browser filter row
+  // ---------------------------------------------------------------------------------------------
+  const tree = { expand: null, collapse: null };
+  LKT.bindTree = (expand, collapse) => {
+    tree.expand = expand;
+    tree.collapse = collapse;
+    return 0;
+  };
+  let treeButtons = null;
+  function renderTreeButtons(area) {
+    const box = area && area.querySelector('[data-insp-path*="filter-search-input.tsx"]:has(> input)');
+    if (!settings().treeExpandButtons || !box || !tree.expand) {
+      treeButtons?.remove();
+      return;
+    }
+    if (!treeButtons) {
+      treeButtons = document.createElement("span");
+      treeButtons.className = "lkt-tree-buttons";
+      treeButtons.dataset.lktOwn = "";
+      for (const [icon, label, key] of [
+        ["fas fa-angles-down", "Expand all", "expand"],
+        ["fas fa-angles-up", "Collapse all", "collapse"],
+      ]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "lkt-tree-button";
+        b.title = label;
+        b.setAttribute("aria-label", label);
+        b.append(Object.assign(document.createElement("i"), { className: icon }));
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          try {
+            tree[key]?.();
+          } catch (err) {
+            warn(`${label} failed`, err);
+          }
+        });
+        treeButtons.append(b);
+      }
+    }
+    if (treeButtons.parentElement !== box) box.append(treeButtons);
+  }
+
+  // ---------------------------------------------------------------------------------------------
   // Feature: press "/" to jump to the Project Browser filter
   // ---------------------------------------------------------------------------------------------
   document.addEventListener(
@@ -944,6 +1000,7 @@
     if (area) {
       markTagSources(area);
       renderTagShortcuts(area);
+      renderTreeButtons(area);
       renderPageRow("suggested", area);
       renderPageRow("recent", area);
     }

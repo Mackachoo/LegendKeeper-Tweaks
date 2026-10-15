@@ -20,6 +20,7 @@ const DEFAULTS = {
   suggestTab: false,
   blockHandleScale: 1,
   tabsFitWidth: true,
+  treeExpandButtons: true,
   tabStyle: "pills",
 };
 

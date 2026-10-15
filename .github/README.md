@@ -80,6 +80,8 @@ Suggestions are learned from how you use the project, in this browser only, and 
 
 Hover a suggestion to see why it's there. The Suggested tab's **Reset** button forgets the learned history for the project.
 
+**Expand / collapse all.** Two buttons beside the filter box open or close every folder in the tree, using LegendKeeper's own Expand all / Collapse all.
+
 **Quick filter key `/`.** Press `/` anywhere outside a text box to jump into the Project Browser's "Find by name or #tag" box, ready to type.
 
 ### Cover images
@@ -126,12 +128,13 @@ Object.keys(localStorage).filter((k) => k.startsWith("lkt:")).forEach((k) => loc
 
 LegendKeeper is a Next.js app bundled with Turbopack.
 
-- **Patching the Project Browser.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes six small, regex-located edits to the Project Browser's `ResourceBrowser` module:
+- **Patching the Project Browser.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes seven small, regex-located edits to the Project Browser's `ResourceBrowser` module:
   - `nested-tag-filter`: before LegendKeeper builds its flat filtered list, hand the matches and the full tree to `__LKT.nestFilter`, which returns a pruned tree (matches plus their ancestors).
   - `nested-filter-expand`: keeps your folder open/closed state (and the chevrons) working while the nested filter is on; LegendKeeper normally drops it while filtering.
   - `expose-tag-filter`: passes the Project Browser's tag-filter state and setter to the extension, so tag shortcuts drive the real filter.
   - `expose-entity-store`: passes LegendKeeper's client-side data store (read only), used for cover images, tag counts and page names.
   - `expose-navigate`: passes the Project Browser's navigate-to-page function, the same one LegendKeeper's shortcut bar uses (Recent pages, tabs).
+  - `expose-tree-expand`: passes the tree's own Expand all / Collapse all functions, for the filter-row buttons.
   - `expose-adapter`: passes LegendKeeper's data adapter, used to look up covers and page details, and by Set for subpages to call LegendKeeper's own update functions.
 - **Cover icons** are a generated stylesheet keyed on page ID (`<style id="lkt-covers">`). LegendKeeper's DOM, including the rich-text editor, is never modified for them.
 - **Everything else** is added on top of React. It finds LegendKeeper's elements through the `data-insp-path` source annotations LegendKeeper ships in production and the tree's `data-testid="resource-tree-item-<id>"` rows.
