@@ -824,3 +824,19 @@ html[data-lkt-handle] .lk-tier-grabber {
   background: hsl(var(--foreground) / 0.08);
   color: hsl(var(--foreground));
 }
+
+/* Unpinning a tag takes two clicks: the first turns × into a red "Remove?". */
+.lkt-tag-shortcut.lkt-confirming .lkt-remove {
+  display: inline-block;
+  width: auto;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgb(239 68 68 / 0.18);
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 1;
+}
+.lkt-tag-shortcut.lkt-confirming .lkt-count {
+  display: none;
+}

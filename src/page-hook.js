@@ -830,7 +830,25 @@
     if (rm) {
       e.preventDefault();
       e.stopPropagation();
-      removeShortcut(rm.dataset.lktRemove);
+      // Two clicks to unpin, so a stray click doesn't lose a pin: the first arms it ("Remove?"),
+      // a second within a few seconds removes it.
+      if (rm.dataset.armed) {
+        removeShortcut(rm.dataset.lktRemove);
+        return;
+      }
+      rm.dataset.armed = "1";
+      rm.textContent = "Remove?";
+      rm.title = "Click again to unpin this tag";
+      rm.closest(".lkt-tag-shortcut")?.classList.add("lkt-confirming");
+      const disarm = () => {
+        if (!rm.isConnected || !rm.dataset.armed) return;
+        delete rm.dataset.armed;
+        rm.textContent = "×";
+        rm.title = "Remove tag shortcut";
+        rm.closest(".lkt-tag-shortcut")?.classList.remove("lkt-confirming");
+      };
+      setTimeout(disarm, 3000);
+      rm.closest(".lkt-tag-shortcut")?.addEventListener("mouseleave", disarm, { once: true });
       return;
     }
     const shortcut = e.target.closest("[data-lkt-shortcut]");
