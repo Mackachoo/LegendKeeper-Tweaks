@@ -1,7 +1,7 @@
 // LegendKeeper Tweaks — page tabs.
 //
-// A tab strip along the top of the page content (the Project Browser on the left and the page's
-// sidebar on the right keep their full height). It behaves like browser tabs:
+// A tab strip along the top of the page content. The Project Browser on the left keeps its full
+// height; the page's sidebar on the right starts below the tabs. It behaves like browser tabs:
 //   - navigating normally changes the page in the active tab
 //   - opening a page that's already in a tab switches to that tab
 //   - middle-click any page link (tree, @mentions, backlinks, ...) to open it in a new tab
@@ -104,13 +104,12 @@
       : null;
   }
 
-  // The page's own sidebar is position:fixed over the right of the content area, so keep the
-  // tabs clear of it.
-  function rightInset() {
-    const side = document.querySelector('.resource-view-wrapper [data-insp-path*="components/Sidebar.tsx"].fixed');
-    if (!side) return 0;
-    const r = side.getBoundingClientRect();
-    return r.width > 0 && r.left < window.innerWidth ? Math.max(0, window.innerWidth - r.left) : 0;
+  // The page's own sidebar is position:fixed under the top bar. tweaks.css moves it down to
+  // start where the tab strip ends, using this variable.
+  function publishStripBottom(strip) {
+    const bottom = `${Math.round(strip.getBoundingClientRect().bottom)}px`;
+    const root = document.documentElement;
+    if (root.style.getPropertyValue("--lkt-tabs-bottom") !== bottom) root.style.setProperty("--lkt-tabs-bottom", bottom);
   }
 
   function ensureStrip(host) {
@@ -131,8 +130,7 @@
       });
     }
     if (host.firstElementChild !== strip) host.prepend(strip);
-    const inset = `${Math.round(rightInset())}px`;
-    if (strip.style.getPropertyValue("--lkt-tabs-right") !== inset) strip.style.setProperty("--lkt-tabs-right", inset);
+    publishStripBottom(strip);
     return strip;
   }
 

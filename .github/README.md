@@ -18,7 +18,7 @@ Everything here is about usability: making LegendKeeper easier and quicker to ge
 
 ### Tabs
 
-**Page tabs.** A tab bar along the top of the page content, so you can keep several pages open and switch in one click. The Project Browser on the left and the page's sidebar on the right keep their full height.
+**Page tabs.** A tab bar along the top of the page content, so you can keep several pages open and switch in one click. The Project Browser on the left keeps its full height, and the page's sidebar on the right sits below the tabs.
 
 - Navigating normally changes the page in the current tab, like a browser.
 - **Middle-click** any page link (Project Browser, @mentions, backlinks…) to open it in a new tab, or right-click a page in the tree and choose **Open in new tab**.

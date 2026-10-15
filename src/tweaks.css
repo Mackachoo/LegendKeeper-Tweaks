@@ -192,8 +192,8 @@
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Page tabs — a strip along the top of the page content only. The Project Browser (left) and
-   the page's sidebar (right, position:fixed) keep their full height.
+   Page tabs — a strip along the top of the page content. The Project Browser (left) keeps its
+   full height; the page's sidebar (right) starts below the tabs.
    The top bar is always dark; the active tab takes the page background so it joins the page.
    --------------------------------------------------------------------------------------------- */
 /* LegendKeeper's content area is a flex row; with our strip as its first child, stack it. */
@@ -205,6 +205,12 @@ div:has(> .lkt-tabs) > :not(.lkt-tabs) {
   min-height: 0;
   height: auto !important;
 }
+/* The page's sidebar is position:fixed under the top bar (inline top/height); start it where the
+   tab strip ends instead. tabs.js keeps --lkt-tabs-bottom up to date. */
+div:has(> .lkt-tabs) .resource-view-wrapper [data-insp-path*="components/Sidebar.tsx"].fixed {
+  top: var(--lkt-tabs-bottom, 97px) !important;
+  height: calc(100vh - var(--lkt-tabs-bottom, 97px)) !important;
+}
 /* LegendKeeper's sticky page header and page menu buttons are fixed under the top bar. */
 div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   margin-top: 33px;
@@ -215,7 +221,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   align-items: flex-end;
   gap: 2px;
   height: 33px;
-  padding: 0 calc(var(--lkt-tabs-right, 0px) + 8px) 0 8px;
+  padding: 0 8px;
   overflow-x: auto;
   overflow-y: hidden;
   background: #0e0f0f;
