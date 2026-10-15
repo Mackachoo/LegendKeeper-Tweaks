@@ -948,7 +948,8 @@
       renderPageRow("recent", area);
     }
     // Content block handle size: tweaks.css scales LegendKeeper's grip by --lkt-handle-scale.
-    const scale = Number(settings().blockHandleScale) || 1;
+    // 0.75×–2×; older settings outside that range are clamped.
+    const scale = Math.min(2, Math.max(0.75, Number(settings().blockHandleScale) || 1));
     const root = document.documentElement;
     if (scale === 1) {
       if (root.hasAttribute("data-lkt-handle")) root.removeAttribute("data-lkt-handle");

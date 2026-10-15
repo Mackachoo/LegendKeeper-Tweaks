@@ -44,7 +44,7 @@ Each setting starts on **Leave**; only the ones you switch to On, Off or Set are
 
 **Reading time.** Longer pages (300+ words) show "4 min read · 900 words" at the end of the title row.
 
-**Block handle size.** A slider for the grip you drag content blocks by: 0.5×, 1×, 1.5×, 2×, 2.5×, 3× or 4×.
+**Block handle size.** A slider for the grip you drag content blocks by, from 0.75× to 2× in quarter steps.
 
 ### Project Browser
 
