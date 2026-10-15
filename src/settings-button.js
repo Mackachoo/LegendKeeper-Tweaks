@@ -7,6 +7,23 @@
 
   let button = null;
   let panel = null;
+  let observer = null;
+
+  // After the extension is reloaded or updated, this copy keeps running in already-open tabs but
+  // can no longer reach the extension ("Extension context invalidated"). Tidy up and stop.
+  function alive() {
+    try {
+      return !!chrome.runtime?.id;
+    } catch {
+      return false;
+    }
+  }
+  function retire() {
+    observer?.disconnect();
+    closePanel();
+    button?.remove();
+    button = null;
+  }
 
   function findShare() {
     for (const el of document.querySelectorAll(`button[data-insp-path*="${NAVBAR}"]`)) {
@@ -44,6 +61,7 @@
   }
 
   function openPanel() {
+    if (!alive()) return retire();
     panel = document.createElement("div");
     panel.className = "lkt-settings-panel";
     panel.setAttribute("role", "dialog");
@@ -96,15 +114,17 @@
   const start = () => {
     ensureButton();
     let queued = false;
-    new MutationObserver(() => {
+    observer = new MutationObserver(() => {
       if (queued) return;
       queued = true;
       requestAnimationFrame(() => {
         queued = false;
+        if (!alive()) return retire();
         ensureButton();
         if (panel) panel.dataset.theme = theme();
       });
-    }).observe(document.body, { childList: true, subtree: true });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   };
   if (document.body) start();
   else document.addEventListener("DOMContentLoaded", start, { once: true });

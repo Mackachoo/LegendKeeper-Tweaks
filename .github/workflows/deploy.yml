@@ -86,7 +86,7 @@ jobs:
             --data-urlencode "client_secret=$CLIENT_SECRET" \
             --data-urlencode "refresh_token=$REFRESH_TOKEN" \
             --data-urlencode "grant_type=refresh_token") \
-            || { echo "::error::Token request failed: $res"; exit 1; }
+            || { echo "::error::Token request failed: $(tr -s '\n' ' ' <<<"$res")"; exit 1; }
           token=$(jq -r .access_token <<<"$res")
           echo "::add-mask::$token"
           echo "CWS_TOKEN=$token" >> "$GITHUB_ENV"
@@ -100,7 +100,14 @@ jobs:
             -H "Content-Type: application/zip" \
             --data-binary @extension.zip \
             "$CWS_API/upload/v2/$base:upload?uploadType=media") \
-            || { echo "::error::Upload request failed: $res"; exit 1; }
+            || {
+              # GitHub only shows the first line of an error, so flatten the response. The item's
+              # status usually explains a refusal (e.g. still in review, wrong item ID).
+              echo "::error::Upload request failed: $(tr -s '\n' ' ' <<<"$res")"
+              status=$(curl -sS -H "Authorization: Bearer $CWS_TOKEN" "$CWS_API/v2/$base:fetchStatus" | tr -s '\n' ' ')
+              echo "::error::Item status: $status"
+              exit 1
+            }
           echo "$res"
           state=$(jq -r .uploadState <<<"$res")
           # Large uploads are processed asynchronously.
@@ -108,12 +115,12 @@ jobs:
             [ "$state" = "IN_PROGRESS" ] || break
             sleep 10
             res=$(curl -sS --fail-with-body -H "Authorization: Bearer $CWS_TOKEN" "$CWS_API/v2/$base:fetchStatus") \
-              || { echo "::error::Status request failed: $res"; exit 1; }
+              || { echo "::error::Status request failed: $(tr -s '\n' ' ' <<<"$res")"; exit 1; }
             state=$(jq -r .lastAsyncUploadState <<<"$res")
             echo "Upload state: $state"
           done
           if [ "$state" != "SUCCEEDED" ]; then
-            echo "::error::Upload did not succeed: $res"
+            echo "::error::Upload did not succeed: $(tr -s '\n' ' ' <<<"$res")"
             exit 1
           fi
 
@@ -125,7 +132,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{}' \
             "$CWS_API/v2/publishers/$PUBLISHER_ID/items/$EXTENSION_ID:publish") \
-            || { echo "::error::Publish request failed: $res"; exit 1; }
+            || { echo "::error::Publish request failed: $(tr -s '\n' ' ' <<<"$res")"; exit 1; }
           echo "$res"
 
       - name: Tag release

@@ -50,6 +50,10 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync") return;
-    chrome.storage.sync.get(DEFAULTS, publish);
+    try {
+      chrome.storage.sync.get(DEFAULTS, publish);
+    } catch {
+      // Extension was reloaded; this copy is stale and the page will pick up the new one on reload.
+    }
   });
 })();
