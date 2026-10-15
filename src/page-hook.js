@@ -18,6 +18,7 @@
 //   6. expose-tree-expand: hands us the tree's own Expand all / Collapse all (filter-row buttons).
 //   7. nested-filter-drag: lets you drag pages to move them while the nested filter is on (LegendKeeper
 //      disables tree dragging while filtering, which made drops there misbehave).
+//   8. expose-root: hands us the page the shortcut bar has narrowed the tree to (per-page tag pins).
 //
 // Everything else is additive DOM/CSS on top of the React app. The only LegendKeeper data we
 // ever write is through "Apply settings to subpages", an explicit, confirmed action that uses
@@ -56,6 +57,7 @@
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
+    tagPinsPerShortcut: false,
     recentPlacement: "bottom", // "off" | "filter" | "bottom" | "tabs"
     recentTab: true,
     suggestPlacement: "tabs", // "off" | "filter" | "bottom" | "tabs"
@@ -140,6 +142,14 @@
       re: /dragEnabled:(\w+)&&!(\w+),draggableContainerClass:/,
       replace: (m, canDrag, isFiltering) =>
         `dragEnabled:${canDrag}&&(!${isFiltering}||!!(window.__LKT&&window.__LKT.nestActive)),draggableContainerClass:`,
+    },
+    {
+      name: "expose-root",
+      gate: "lk:tree-filter-rule",
+      // el=(0,F.useUiStore)(e=>e.rootResourceId),ep=(0,F.useUiStore)(e=>e.setRootResourceId) — the
+      // page LegendKeeper's shortcut bar has narrowed the tree to (null for all pages).
+      re: /(\w+)=\(0,(\w+)\.useUiStore\)\((\w+)=>\3\.rootResourceId\),(\w+)=\(0,\2\.useUiStore\)\(\w+=>\w+\.setRootResourceId\)/,
+      replace: (m, root) => `${m},__lktRootBind=window.__LKT&&window.__LKT.bindRoot(${root})`,
     },
     {
       name: "expose-tree-expand",
@@ -418,7 +428,23 @@
   const REORDER_MIME = "application/x-lkt-reorder";
   let draggingTag = null;
 
-  const shortcutsKey = () => (projectId() ? `lkt:tag-shortcuts:${projectId()}` : null);
+  // The pinned page LegendKeeper's shortcut bar is showing (null = all pages). Only changes when
+  // a shortcut is clicked, not when you visit a page.
+  let shortcutRoot = null;
+  LKT.bindRoot = (root) => {
+    if ((root || null) !== shortcutRoot) {
+      shortcutRoot = root || null;
+      scheduleRender();
+    }
+    return 0;
+  };
+  // With "Separate pins per pinned page" on, each pinned page has its own tag pins; "all pages"
+  // keeps the project's original set.
+  const shortcutsKey = () => {
+    const pid = projectId();
+    if (!pid) return null;
+    return settings().tagPinsPerShortcut && shortcutRoot ? `lkt:tag-shortcuts:${pid}:root:${shortcutRoot}` : `lkt:tag-shortcuts:${pid}`;
+  };
   function loadShortcuts() {
     const key = shortcutsKey();
     const v = key ? loadJSON(key, []) : [];

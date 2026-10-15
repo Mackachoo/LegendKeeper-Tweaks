@@ -17,6 +17,7 @@
     tabs: true,
     tabsMiddleClick: true,
     bulkSettings: true,
+    tagPinsPerShortcut: false,
     recentPlacement: "bottom",
     recentTab: true,
     suggestPlacement: "tabs",

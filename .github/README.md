@@ -60,6 +60,7 @@ LegendKeeper's left-hand panel (Project / Templates / Assets). "Sidebar" in Lege
 - Shift-click or ⌘-click to combine several tags.
 - Drag pinned tags to reorder them. Hover and click **×** to unpin.
 - Each pinned tag shows how many pages carry it (can be switched off).
+- **Separate pins per pinned page** (off by default): each pinned page in LegendKeeper's shortcut bar gets its own pinned tags. Clicking that shortcut switches to its tags; just visiting the page doesn't. With no pinned page selected you get your original pins.
 - When a pinned tag is active, LegendKeeper's duplicate tag pill under the filter box is hidden; the pinned tag shows as selected instead.
 
 Pins are saved per project, in this browser only.
@@ -128,10 +129,11 @@ Object.keys(localStorage).filter((k) => k.startsWith("lkt:")).forEach((k) => loc
 
 LegendKeeper is a Next.js app bundled with Turbopack.
 
-- **Patching the Project Browser.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes eight small, regex-located edits to the Project Browser's `ResourceBrowser` module:
+- **Patching the Project Browser.** `src/page-hook.js` runs at `document_start` in the page's own JavaScript context and wraps `globalThis.TURBOPACK`, so it sees every module before it runs. It makes nine small, regex-located edits to the Project Browser's `ResourceBrowser` module:
   - `nested-tag-filter`: before LegendKeeper builds its flat filtered list, hand the matches and the full tree to `__LKT.nestFilter`, which returns a pruned tree (matches plus their ancestors).
   - `nested-filter-expand`: keeps your folder open/closed state (and the chevrons) working while the nested filter is on; LegendKeeper normally drops it while filtering.
   - `nested-filter-drag`: turns the tree's drag-and-drop back on while the nested filter is on, so pages can be moved between folders; LegendKeeper switches it off while filtering, which made drops there misbehave.
+  - `expose-root`: passes the page the shortcut bar has narrowed the tree to, for per-page tag pins.
   - `expose-tag-filter`: passes the Project Browser's tag-filter state and setter to the extension, so tag shortcuts drive the real filter.
   - `expose-entity-store`: passes LegendKeeper's client-side data store (read only), used for cover images, tag counts and page names.
   - `expose-navigate`: passes the Project Browser's navigate-to-page function, the same one LegendKeeper's shortcut bar uses (Recent pages, tabs).
