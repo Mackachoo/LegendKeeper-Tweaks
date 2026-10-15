@@ -220,6 +220,28 @@
       el("div", { className: "lkt-setting lkt-indent", dataset: { when: "colour" } }, colour, el("small", { textContent: "Pick a colour" })),
     );
 
+    // Tags: add or remove the same tags on every page. Suggestions come from the project's tags.
+    body.append(el("h3", { textContent: "Tags" }));
+    const tagList = el("datalist", { id: "lkt-tag-options" });
+    const known = new Set();
+    for (const r of allResources()) for (const t of (r && r.tags) || []) known.add(t);
+    for (const t of [...known].sort((a, b) => a.localeCompare(b))) tagList.append(el("option", { value: t }));
+    const addTags = el("input", { type: "text", className: "lkt-input", placeholder: "e.g. Player, Arginoth", spellcheck: false });
+    const removeTags = el("input", { type: "text", className: "lkt-input", placeholder: "Tags to take off", spellcheck: false });
+    addTags.setAttribute("list", "lkt-tag-options");
+    removeTags.setAttribute("list", "lkt-tag-options");
+    body.append(
+      tagList,
+      el(
+        "div",
+        { className: "lkt-setting" },
+        el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Add tags" }), el("small", { textContent: "Comma-separated; pages that already have them are skipped" })),
+      ),
+      el("div", { className: "lkt-setting lkt-indent" }, addTags),
+      el("div", { className: "lkt-setting" }, el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Remove tags" }))),
+      el("div", { className: "lkt-setting lkt-indent" }, removeTags),
+    );
+
     // Sidebar blocks: add one to every page, or remove blocks by title.
     body.append(el("h3", { textContent: "Sidebar blocks" }));
     const blockType = el("select", { className: "lkt-input lkt-select" });
@@ -258,7 +280,7 @@
       ),
       el("div", { className: "lkt-setting lkt-indent" }, removeTitle),
     );
-    const blockInputs = { blockType, blockTitle, skipExisting, removeTitle };
+    const blockInputs = { blockType, blockTitle, skipExisting, removeTitle, addTags, removeTags, knownTags: [...known] };
 
     const status = el("div", { className: "lkt-dialog-status" });
     const cancel = el("button", { type: "button", className: "lkt-btn", textContent: "Cancel" });
@@ -370,6 +392,11 @@
       };
     }
     if (blocks && blocks.removeTitle.value.trim()) changes.removeTitle = blocks.removeTitle.value.trim();
+    // Use an existing tag's spelling when one matches, so "player" doesn't create a second tag.
+    const canonical = (t) => (blocks?.knownTags || []).find((k) => k.toLowerCase() === t.toLowerCase()) || t;
+    const tagsFrom = (input) => [...new Set(input.value.split(",").map((t) => t.trim()).filter(Boolean).map(canonical))];
+    if (blocks && tagsFrom(blocks.addTags).length) changes.addTags = tagsFrom(blocks.addTags);
+    if (blocks && tagsFrom(blocks.removeTags).length) changes.removeTags = tagsFrom(blocks.removeTags);
     return changes;
   }
 
@@ -435,6 +462,18 @@
         if (glyph) patch.iconGlyph = glyph;
         if (colour) patch.iconColor = colour;
         tasks.push([id, () => adapter.updateResourceIcon(id, glyph, colour, undefined), () => store.updateResource(id, patch)]);
+      }
+      if (changes.addTags || changes.removeTags) {
+        const current = Array.isArray(r.tags) ? r.tags : [];
+        const remove = new Set((changes.removeTags || []).map((t) => t.toLowerCase()));
+        let next = current.filter((t) => !remove.has(t.toLowerCase()));
+        for (const t of changes.addTags || []) {
+          if (!next.some((x) => x.toLowerCase() === t.toLowerCase())) next.push(t);
+        }
+        if (next.length !== current.length || next.some((t, i) => t !== current[i])) {
+          const tags = next;
+          tasks.push([id, () => adapter.updateResourceTags(id, tags), () => store.updateResource(id, { tags })]);
+        }
       }
       if (needBlocks) {
         const blocks = Array.isArray(r.properties) ? r.properties : [];

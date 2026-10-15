@@ -39,6 +39,7 @@ Everything here is about usability: making LegendKeeper easier and quicker to ge
 | Access | Lock, Hide |
 | Sidebar | Show sidebar by default, Sidebar scrolling |
 | Icon | Icon (Font Awesome name, e.g. `dragon`) and icon colour (shown on map pins and in collection lists) |
+| Tags | Add tags to every page (comma-separated, suggestions from your existing tags) or remove tags; pages that already have / lack them are skipped |
 | Sidebar blocks | Add a block (Tags, Image, Properties, Text, Aliases, Backlinks or Collection) to every page's sidebar, optionally skipping pages that already have one; remove every block with a given title (e.g. "Facts") |
 
 Each setting starts on **Leave**; only the ones you switch to On, Off or Set are changed. Removing blocks deletes them and their contents, so before anything is deleted the dialog shows how many blocks on how many pages and asks you to click again. Pages that already have the value are skipped. Changes go through the same LegendKeeper functions its own page menu (⋮) uses, one page at a time, with progress shown. Permissions are deliberately not included.
