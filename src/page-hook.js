@@ -444,17 +444,33 @@
   let shortcutRoot = null;
   LKT.bindRoot = (root) => {
     if ((root || null) !== shortcutRoot) {
+      const previous = shortcutRoot;
       shortcutRoot = root || null;
+      clearPinnedFilterTags(previous);
       scheduleRender();
     }
     return 0;
   };
+  // With pinned page specific tags, switching pinned page turns off any active filter tags that
+  // came from the previous page's pins (they're no longer shown). Tags picked from the search box
+  // stay. Deferred so we never set state mid-render.
+  function clearPinnedFilterTags(previousRoot) {
+    if (!settings().tagPinsPerShortcut || !tagFilter.set) return;
+    const key = shortcutsKey(previousRoot);
+    const pins = key ? loadJSON(key, []) : [];
+    if (!Array.isArray(pins) || !pins.length) return;
+    const set = tagFilter.set;
+    setTimeout(() => {
+      const kept = (tagFilter.tags || []).filter((t) => !pins.includes(t));
+      if (kept.length !== (tagFilter.tags || []).length) set(kept);
+    }, 0);
+  }
   // With "Pinned page specific tags" on, each pinned page has its own tag pins; "all pages"
   // keeps the project's original set.
-  const shortcutsKey = () => {
+  const shortcutsKey = (root = shortcutRoot) => {
     const pid = projectId();
     if (!pid) return null;
-    return settings().tagPinsPerShortcut && shortcutRoot ? `lkt:tag-shortcuts:${pid}:root:${shortcutRoot}` : `lkt:tag-shortcuts:${pid}`;
+    return settings().tagPinsPerShortcut && root ? `lkt:tag-shortcuts:${pid}:root:${root}` : `lkt:tag-shortcuts:${pid}`;
   };
   function loadShortcuts() {
     const key = shortcutsKey();

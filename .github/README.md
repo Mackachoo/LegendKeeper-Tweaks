@@ -60,7 +60,7 @@ LegendKeeper's left-hand panel (Project / Templates / Assets). "Sidebar" in Lege
 - Shift-click or ⌘-click to combine several tags.
 - Drag pinned tags to reorder them. Hover and click **×**, then **Remove?**, to unpin.
 - Each pinned tag shows how many pages carry it (can be switched off).
-- **Pinned page specific tags** (off by default): each pinned page in LegendKeeper's shortcut bar gets its own pinned tags. Clicking that shortcut switches to its tags; just visiting the page doesn't. With no pinned page selected you get your original pins.
+- **Pinned page specific tags** (off by default): each pinned page in LegendKeeper's shortcut bar gets its own pinned tags. Clicking that shortcut switches to its tags (just visiting the page doesn't), and any active filter tags from the previous page's pins turn off; tags you picked from the search box stay. With no pinned page selected you get your original pins.
 - When a pinned tag is active, LegendKeeper's duplicate tag pill under the filter box is hidden; the pinned tag shows as selected instead.
 
 Pins are saved per project, in this browser only.
