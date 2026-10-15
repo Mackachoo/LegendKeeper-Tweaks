@@ -810,11 +810,22 @@
   const coverKey = () => (projectId() ? `lkt:covers:${projectId()}` : null);
   let coverCache = { key: null, map: {} };
 
+  // [image url, banner url, crop]. The crop is how the page shows the image in its sidebar:
+  // { o: origin, s: scale, a: frame height / width } (a is null when LegendKeeper didn't store it).
+  const SIDEBAR_IMAGE_WIDTH = 272;
   function imagesOf(r) {
-    const img = (r.cover && r.cover.data && r.cover.data.url) || r.imageUrl || "";
+    const d = r.cover && r.cover.data;
+    const img = (d && d.url) || r.imageUrl || "";
     const banner = (r.banner && r.banner.enabled && r.banner.url) || "";
-    return [img, banner];
+    let crop = null;
+    if (d && d.url) {
+      crop = { o: d.origin || null, s: d.scale || 1, a: d.displayAspectRatio || (d.height ? d.height / SIDEBAR_IMAGE_WIDTH : null) };
+    } else if (r.imageUrl) {
+      crop = { o: r.imageOrigin || null, s: r.imageScale || 1, a: null };
+    }
+    return [img, banner, crop];
   }
+  const sameEntry = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
   function refreshCoverCache() {
     const key = coverKey();
@@ -830,12 +841,12 @@
       }
       // "index" resources haven't loaded their images yet: keep whatever we cached.
       if (!r.hydrationLevel || r.hydrationLevel === "index") continue;
-      const [img, banner] = imagesOf(r);
+      const entry = imagesOf(r);
       const prev = map[r.id];
-      if (!img && !banner) {
+      if (!entry[0] && !entry[1]) {
         if (prev) (delete map[r.id], (changed = true));
-      } else if (!prev || prev[0] !== img || prev[1] !== banner) {
-        map[r.id] = [img, banner];
+      } else if (!prev || !sameEntry(prev, entry)) {
+        map[r.id] = entry;
         changed = true;
       }
     }
@@ -850,7 +861,7 @@
     const pid = projectId();
     const key = coverKey();
     if (!pid || !key || prefetching === pid || !adapter || typeof adapter.getResourcesByIds !== "function") return;
-    const doneKey = `lkt:covers-fetched:${pid}`;
+    const doneKey = `lkt:covers-fetched-v2:${pid}`; // v2: entries now include the crop
     try {
       if (sessionStorage.getItem(doneKey)) return;
     } catch {}
@@ -866,8 +877,8 @@
         const map = coverCache.key === key ? coverCache.map : (coverCache = { key, map: loadJSON(key, {}) }).map;
         for (const r of batch || []) {
           if (!r || !r.id) continue;
-          const [img, banner] = imagesOf(r);
-          if (img || banner) map[r.id] = [img, banner];
+          const entry = imagesOf(r);
+          if (entry[0] || entry[1]) map[r.id] = entry;
           else delete map[r.id];
         }
         saveJSON(key, map);
@@ -883,6 +894,14 @@
       prefetching = null;
     }
   }
+
+  // The cover's url and, when it's the page's own image (not the banner), its crop.
+  LKT.coverInfo = (id) => {
+    const entry = coverCache.map[id];
+    if (!entry || !settings().coverIcons) return null;
+    if (entry[0]) return { url: entry[0], crop: entry[2] || null };
+    return settings().coverIconsUseBanner && entry[1] ? { url: entry[1], crop: null } : null;
+  };
 
   LKT.coverUrl = (id) => {
     const entry = coverCache.map[id];

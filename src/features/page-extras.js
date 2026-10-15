@@ -15,22 +15,56 @@
   let hoverTimer = 0;
   let hoverRow = null;
 
+  // LegendKeeper's own crop maths (computeCropLayout, with relaxClamp as the sidebar uses it):
+  // where to draw an image of natural size nw×nh in a w×h frame for a given origin and scale.
+  function cropLayout(nw, nh, w, h, scale = 1, origin) {
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+    const k = scale || 1;
+    const [ox, oy] = origin && origin.length >= 2 ? origin : [0.5, 0.5];
+    let bw, bh;
+    if (h / w > nh / nw) (bh = h), (bw = (h / nh) * nw);
+    else (bw = w), (bh = (w / nw) * nh);
+    const dw = bw * k, dh = bh * k;
+    const vw = (1 / k) * Math.min(1, w / h / (nw / nh));
+    const vh = (1 / k) * Math.min(1, h / w / (nh / nw));
+    return { dw, dh, x: -clamp(ox - vw / 2, -vw, 1) * dw, y: -clamp(oy - vh / 2, -vh, 1) * dh };
+  }
+
+  const CARD_W = 220;
+  function layoutCard(info) {
+    const [frame] = card.children;
+    const img = frame.firstElementChild;
+    const nw = img.naturalWidth, nh = img.naturalHeight;
+    if (!nw || !nh) return;
+    // Same shape as the page's sidebar image frame; fall back to the image's own shape.
+    const aspect = Math.min(1.3, Math.max(0.45, info.crop?.a || nh / nw));
+    const h = Math.round(CARD_W * aspect);
+    frame.style.height = `${h}px`;
+    const l = cropLayout(nw, nh, CARD_W, h, info.crop?.s, info.crop?.o);
+    Object.assign(img.style, { width: `${l.dw}px`, height: `${l.dh}px`, left: `${l.x}px`, top: `${l.y}px` });
+  }
+
   function showCard(row) {
     const id = row.dataset.testid.slice("resource-tree-item-".length);
-    const url = LKT.coverUrl(id);
-    if (!url) return;
+    const info = LKT.coverInfo(id);
+    if (!info) return;
     if (!card) {
       card = document.createElement("div");
       card.className = "lkt-cover-card";
       card.dataset.lktOwn = "";
-      card.append(document.createElement("img"), document.createElement("div"));
+      const frame = Object.assign(document.createElement("div"), { className: "lkt-cover-frame" });
+      frame.append(document.createElement("img"));
+      card.append(frame, document.createElement("div"));
       document.body.append(card);
     }
-    const [img, name] = card.children;
-    if (img.getAttribute("src") !== url) img.src = url;
+    const [frame, name] = card.children;
+    const img = frame.firstElementChild;
+    img.onload = () => layoutCard(info);
+    if (img.getAttribute("src") !== info.url) img.src = info.url;
+    else layoutCard(info);
     name.textContent = getResource(id)?.name || "";
     const r = row.getBoundingClientRect();
-    const top = Math.min(Math.max(8, r.top - 40), window.innerHeight - 260);
+    const top = Math.min(Math.max(8, r.top - 40), window.innerHeight - 330);
     card.style.left = `${Math.round(r.right + 12)}px`;
     card.style.top = `${Math.round(top)}px`;
     card.classList.add("lkt-show");

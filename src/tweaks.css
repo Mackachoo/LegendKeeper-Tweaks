@@ -413,11 +413,15 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   opacity: 1;
   transform: none;
 }
-.lkt-cover-card img {
-  display: block;
-  width: 100%;
-  max-height: 220px;
-  object-fit: cover;
+/* The image is positioned with the page's own crop (see page-extras.js). */
+.lkt-cover-frame {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+.lkt-cover-frame img {
+  position: absolute;
+  max-width: none;
 }
 .lkt-cover-card div {
   padding: 8px 10px;
