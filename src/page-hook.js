@@ -295,7 +295,14 @@
     navigateInProject = fn;
     return 0;
   };
-  const glyphClass = (g) => (g && /\bfa-/.test(g) ? g : "fas fa-file-lines");
+  // LegendKeeper stores icons either as classes ("fas fa-book", older pages) or as a bare Font
+  // Awesome name ("book-open", what its icon picker writes now).
+  const iconName = (g) => String(g || "").trim().split(/\s+/).pop().replace(/^fa-/, "");
+  const glyphClass = (g) => {
+    const name = iconName(g);
+    if (!name || !/^[a-z0-9-]+$/.test(name)) return "fas fa-file-lines";
+    return /\bfa-/.test(g) ? g : `fas fa-${name}`;
+  };
 
   function navigateToResource(id) {
     if (typeof navigateInProject === "function") {
@@ -1165,6 +1172,7 @@
     setStyle,
     cssString,
     glyphClass,
+    iconName,
     recentPages,
   };
 

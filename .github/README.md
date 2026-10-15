@@ -38,7 +38,7 @@ Everything here is about usability: making LegendKeeper easier and quicker to ge
 | Layout | Full-width, Table of contents |
 | Access | Lock, Hide |
 | Sidebar | Show property bar, Sidebar scrolling |
-| Icon | Icon (Font Awesome name) and icon colour |
+| Icon | Icon (Font Awesome name, e.g. `dragon`) and icon colour (shown on map pins and in collection lists) |
 
 Each setting starts on **Leave**; only the ones you switch to On, Off or Set are changed. Pages that already have the value are skipped. Changes go through the same LegendKeeper functions its own page menu (⋮) uses, one page at a time, with progress shown. Permissions are deliberately not included.
 

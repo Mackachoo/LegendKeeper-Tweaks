@@ -9,7 +9,7 @@
   "use strict";
   const LKT = window.__LKT;
   if (!LKT || !LKT.util) return;
-  const { settings, getResource, allResources, glyphClass, warn } = LKT.util;
+  const { settings, getResource, allResources, glyphClass, iconName, warn } = LKT.util;
 
   const ROW = '[data-testid^="resource-tree-item-"]';
   let menuResourceId = null;
@@ -183,7 +183,7 @@
 
     // Icon and colour, prefilled from the right-clicked page.
     body.append(el("h3", { textContent: "Icon" }));
-    const glyph = el("input", { type: "text", className: "lkt-input", value: root.iconGlyph || "fas fa-file-lines", spellcheck: false });
+    const glyph = el("input", { type: "text", className: "lkt-input", value: iconName(root.iconGlyph) || "file-lines", spellcheck: false });
     const colour = el("input", { type: "color", className: "lkt-colour", value: /^#[0-9a-f]{6}$/i.test(root.iconColor || "") ? root.iconColor : "#ffffff" });
     const preview = el("i", { className: `lkt-icon-preview ${glyphClass(glyph.value)}` });
     const updatePreview = () => {
@@ -196,14 +196,14 @@
       el(
         "div",
         { className: "lkt-setting" },
-        el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Icon" }), el("small", { textContent: "Font Awesome name, e.g. fas fa-dragon" })),
+        el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Icon" }), el("small", { textContent: "Font Awesome name, e.g. dragon or book-open" })),
         segmented("icon", [["", "Leave"], ["set", "Set"]], ""),
       ),
       el("div", { className: "lkt-setting lkt-indent", dataset: { when: "icon" } }, preview, glyph),
       el(
         "div",
         { className: "lkt-setting" },
-        el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Icon colour" })),
+        el("div", { className: "lkt-setting-text" }, el("span", { textContent: "Icon colour" }), el("small", { textContent: "Shown on map pins and in collection lists" })),
         segmented("colour", [["", "Leave"], ["set", "Set"]], ""),
       ),
       el("div", { className: "lkt-setting lkt-indent", dataset: { when: "colour" } }, colour, el("small", { textContent: "Pick a colour" })),
@@ -281,7 +281,9 @@
       const v = valueOf(form, s.key);
       if (v) changes[s.key] = v === "on";
     }
-    if (valueOf(form, "icon") === "set" && /\bfa-/.test(glyph.value)) changes.iconGlyph = glyph.value.trim();
+    // Stored as a bare name, the way LegendKeeper's own icon picker saves it.
+    const name = iconName(glyph.value);
+    if (valueOf(form, "icon") === "set" && /^[a-z0-9-]+$/.test(name)) changes.iconGlyph = name;
     if (valueOf(form, "colour") === "set") changes.iconColor = colour.value.toUpperCase();
     return changes;
   }
@@ -337,7 +339,7 @@
       if ("propertyBar" in changes && r.showPropertyBar !== changes.propertyBar) {
         tasks.push([id, () => adapter.updateShowPropertyBar(id, changes.propertyBar), () => store.updateResource(id, { showPropertyBar: changes.propertyBar })]);
       }
-      const glyph = changes.iconGlyph && r.iconGlyph !== changes.iconGlyph ? changes.iconGlyph : undefined;
+      const glyph = changes.iconGlyph && iconName(r.iconGlyph) !== changes.iconGlyph ? changes.iconGlyph : undefined;
       const colour = changes.iconColor && (r.iconColor || "").toUpperCase() !== changes.iconColor ? changes.iconColor : undefined;
       if (glyph || colour) {
         const patch = {};
