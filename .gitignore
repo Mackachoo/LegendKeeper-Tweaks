@@ -23,5 +23,3 @@ npm-debug.log*
 .env.*
 !.env.example
 
-# Store screenshots (contain project content; uploaded to the Web Store by hand)
-store/screenshots/

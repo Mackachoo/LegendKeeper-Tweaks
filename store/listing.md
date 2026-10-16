@@ -1,6 +1,6 @@
 # Chrome Web Store listing
 
-Copy-paste text for the Chrome Web Store developer dashboard. The screenshots in `store/screenshots/` (git-ignored) are 1280×800 PNGs.
+Copy-paste text for the Chrome Web Store developer dashboard. The screenshots in `store/screenshots/` are 1280×800 PNGs.
 
 ## Store listing tab
 
@@ -17,52 +17,64 @@ Copy-paste text for the Chrome Web Store developer dashboard. The screenshots in
 **Description:**
 
 ```text
-Tweaks for LegendKeeper adds a set of small, optional quality-of-life improvements to LegendKeeper, the worldbuilding wiki for tabletop games and fiction.
+Unofficial community project, not affiliated with or endorsed by LegendKeeper.
 
-It's for people who spend a lot of time in their LegendKeeper projects and want getting around, finding pages and filtering to be quicker. Everything is about usability: nothing adds new content to your pages, and nothing changes LegendKeeper for anyone else in a shared project. Every tweak can be switched on or off from a settings button next to Share.
+Tweaks for LegendKeeper adds small, optional quality-of-life improvements to LegendKeeper, the worldbuilding wiki for tabletop games and fiction.
 
-TABS
-• Page tabs along the top of the page: keep several pages open and switch between them in one click
+It's for people who live in their LegendKeeper projects: running more than one campaign in the same world, prepping sessions across dozens of pages, or just wanting to get around faster. Nothing adds new content to your pages, nothing changes LegendKeeper for anyone else in a shared project, and every tweak can be switched on or off from a settings button next to Share.
+
+PAGE TABS: WORK ON SEVERAL THINGS AT ONCE
+Keep the session notes, the map, the NPC you're writing and the faction they belong to open side by side, and jump between them in one click instead of hunting through the tree each time.
 • Middle-click any page link, or right-click a page → Open in new tab
-• Drag to reorder, four tab styles (pills, filled, minimal, underline), optional adaptive-width tabs
-• Tabs are remembered for each project
+• Drag to reorder; tabs are remembered for each project
+• Four tab styles (pills, filled, minimal, underline), optional adaptive-width tabs
 
-FINDING AND FILTERING
-• Tag shortcuts: drag a tag into the Project Browser to pin it, then click it to filter (with page counts)
-• Optionally give each pinned page in the shortcut bar its own set of pinned tags
-• Keep the tree when filtering: matching pages stay nested where they are, with their parent folders greyed out, instead of turning into a flat list
+SUGGESTED PAGES: WHAT YOU'LL NEED NEXT
+Learns how you move around your project (which pages you open after which, what you come back to, what you skip) and offers the pages you're likely to want next. Open the tavern and the innkeeper is already waiting.
+• Shown as faded tabs at the end of the tab bar, in the Project Browser, or as their own tab
+• Everything is worked out in your browser; nothing is sent anywhere
+• Recent pages work the same way for where you've just been
+
+TAG SHORTCUTS: ONE WORLD, SEVERAL CAMPAIGNS
+Pin the tags you filter by most and switch with one click, with page counts on each. Turn on pinned page specific tags and each pinned page in LegendKeeper's shortcut bar gets its own set, so your Tuesday group's campaign and your Saturday group's campaign each show just their own sessions, NPCs and locations.
+• Drag a tag into the Project Browser to pin it
 • Your tag filter stays selected after a reload
+
+FILTERS THAT KEEP YOUR TREE
+Normally filtering by a tag flattens everything into one list. With this on, matching pages stay nested in their folders, with the parents shown only for context greyed out, so you still know that "The Drowned Vault" lives under Arginoth → Dungeons.
+• Open and close folders and drag pages around while filtering
 • Expand all / collapse all buttons beside the filter box
-• Recent pages and Suggested pages (learned from how you move around your project) under the filter box, at the bottom of the Project Browser, in the tab bar, or as their own tab
-• Press / to jump straight into the filter box
+• Press / anywhere to jump into the filter box
 
-PAGES
-• Set for subpages: right-click a page to set full-width, table of contents, lock, hide, sidebar, icon and colour on it and everything under it, add or remove tags, and add or remove sidebar blocks, in one go
+SET FOR SUBPAGES: TIDY A WHOLE SECTION AT ONCE
+Right-click a page to change it and everything under it in one go: lock a player-facing section before a session, hide your GM notes, give every NPC the same icon and colour, tag a whole region, or add an Image block to every character's sidebar.
+• Full width, table of contents, lock, hide, sidebar, icon and colour
+• Add or remove tags and sidebar blocks
+• You review and confirm before anything is written; removals ask twice
+
+COVER IMAGES AS ICONS
+Recognise pages at a glance: a small crop of each page's cover image becomes its icon in the Project Browser, tabs, @mentions, backlinks and collection lists.
+• Hover a page for a larger preview, cropped the same way as on the page
+• Optionally load covers for pages you haven't opened yet, or fall back to the banner image
+
+SMALLER TOUCHES
 • Reading time on longer pages
-• A size slider (0.75× to 2×) for the content block drag handle
-
-COVER IMAGES
-• A small crop of each page's cover image as its icon in the Project Browser, tabs, @mentions, backlinks and collection lists
-• A larger cover preview when you hover a page, cropped the same way as on the page
+• A size slider (0.75× to 2×) for the block drag handle
 
 PRIVACY
 • Runs only on legendkeeper.com
 • No accounts, no analytics and no servers of its own: tabs, pins, history and settings stay in your browser
-• The only feature that changes anything in your world is Set for subpages, and only after you review and confirm it (removals ask twice)
+• The only feature that writes anything to your world is Set for subpages, and only after you confirm it
 
-This is an unofficial, open-source project and isn't affiliated with or endorsed by LegendKeeper. Issues, ideas and pull requests are welcome on GitHub: https://github.com/Mackachoo/LegendKeeper-Tweaks
+Open source: issues, ideas and pull requests are welcome at https://github.com/Mackachoo/LegendKeeper-Tweaks
 ```
 
 **Screenshots** (upload in this order):
 
-1. `1-tabs-and-covers.png`: tabs, suggested tabs, cover icons, pinned tags, Recent pages
-2. `2-right-click-menu.png`: Open in new tab and Set for subpages in the page menu
+1. `1-settings.png`: the settings panel
+2. `2-nested-tag-filter.png`: filtering by a tag while keeping the tree
 3. `3-set-for-subpages.png`: the Set for subpages dialog
 4. `4-recents-tab.png`: the Recents tab in the Project Browser
-5. `5-nested-tag-filter.png`: filtering by a tag while keeping the tree
-6. `6-settings.png`: the settings panel
-
-The store allows five screenshots, so drop one; I'd drop 4 or 2.
 
 **Promo tiles** (same folder, 24-bit PNG, no transparency):
 
