@@ -234,7 +234,7 @@ The deploy workflow checks the tag matches the manifest version, packages the ex
 
 ## Disclaimer
 
-LegendKeeper Tweaks is an unofficial, personal project. It is not affiliated with or endorsed by LegendKeeper. The LK mark in the icon belongs to LegendKeeper.
+LegendKeeper Tweaks is an unofficial, personal project. It is not affiliated with or endorsed by LegendKeeper. The icon is a gear with the letters "LK" set in [Cinzel](https://fonts.google.com/specimen/Cinzel) (SIL Open Font License); it doesn't use LegendKeeper's logo.
 
 ## License
 
