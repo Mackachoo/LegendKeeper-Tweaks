@@ -58,6 +58,7 @@
     tabsMiddleClick: true,
     bulkSettings: true,
     tagPinsPerShortcut: false,
+    tagNewPages: true,
     recentPlacement: "bottom", // "off" | "filter" | "bottom" | "tabs"
     recentTab: true,
     suggestPlacement: "tabs", // "off" | "filter" | "bottom" | "tabs"
@@ -246,6 +247,7 @@
   let adapter = null;
   LKT.bindAdapter = (a) => {
     adapter = a;
+    wrapCreateResource(a);
     return 0;
   };
   LKT.adapter = () => adapter;
@@ -442,6 +444,27 @@
   };
   LKT.setTagFilter = (tags) => tagFilter.set && tagFilter.set(tags);
 
+  // LegendKeeper only re-runs the tag filter when the selected tags change, not when a page's
+  // tags do, so a page you tag (or untag) doesn't appear (or leave) until you toggle the filter.
+  // Watch which pages carry the active tags and re-apply the same tags when that changes.
+  let filteredSig = null;
+  function refreshFilterOnTagChange() {
+    const active = tagFilter.tags || [];
+    if (!tagFilter.set || !active.length) {
+      filteredSig = null;
+      return;
+    }
+    const want = new Set(active);
+    let sig = active.join("\u0001") + "|";
+    for (const r of allResources()) {
+      if (r && !r.deletedAt && (r.tags || []).some((t) => want.has(t))) sig += r.id + ",";
+    }
+    if (filteredSig !== null && sig !== filteredSig && sig.startsWith(filteredSig.split("|")[0] + "|")) {
+      tagFilter.set(active.slice());
+    }
+    filteredSig = sig;
+  }
+
   const TAG_MIME = "application/x-lkt-tag";
   const REORDER_MIME = "application/x-lkt-reorder";
   let draggingTag = null;
@@ -509,6 +532,74 @@
     if (i === -1) list.push(tag);
     else list.splice(i, 0, tag);
     saveShortcuts(list);
+  }
+
+  // While filtering by a pinned tag, a newly created page would vanish from the tree straight
+  // away, so give it the active pinned tags. LegendKeeper creates pages through a worker, so we
+  // add the tags right after it returns rather than changing the request. Applying a template
+  // replaces a page's tags, so a page that had an active pinned tag gets it back afterwards.
+  function wrapCreateResource(a) {
+    if (!a || a.__lktCreateWrapped) return;
+    a.__lktCreateWrapped = true;
+    const wrap = (name, after) => {
+      const original = a[name];
+      if (typeof original !== "function") return;
+      a[name] = async function (...args) {
+        const before = after.before ? after.before(...args) : null;
+        const result = await original.apply(this, args);
+        after(result, args, before).catch((e) => warn("tag new page", e));
+        return result;
+      };
+    };
+    // createResource({name, parentId, ...}) → the new resource
+    wrap("createResource", (created, [input]) => {
+      if (input && input.parentId === "templates") return Promise.resolve();
+      return tagWithActivePins(created && created.id);
+    });
+    // createResourceFromTemplate(templateId, {parentId, ...}) → the new resource (or its id)
+    wrap("createResourceFromTemplate", (created, [, opts]) => {
+      if (opts && opts.parentId === "templates") return Promise.resolve();
+      return tagWithActivePins(typeof created === "string" ? created : created && created.id);
+    });
+    // applyTemplateToResource(resourceId, templateId, opts)
+    const reapply = (_, [id], before) => tagWithActivePins(id, { only: before, changedFrom: before });
+    reapply.before = (id) => ((getResource(id) || {}).tags || []).slice();
+    wrap("applyTemplateToResource", reapply);
+  }
+  function activePinnedTags() {
+    const s = settings();
+    if (!s.tagShortcuts || !s.tagNewPages) return [];
+    const pins = loadShortcuts();
+    return (tagFilter.tags || []).filter((t) => pins.includes(t));
+  }
+  const sameTags = (x, y) => x.length === y.length && x.every((t) => y.includes(t));
+  // only: limit to tags the page already had. changedFrom: wait for the store to move off these
+  // tags first (a template's new tags arrive after the call returns).
+  async function tagWithActivePins(id, { only = null, changedFrom = null } = {}) {
+    let add = activePinnedTags();
+    if (only) add = add.filter((t) => only.includes(t));
+    if (!id || !add.length) return;
+    let resource = getResource(id);
+    for (let i = 0; i < 20 && (!resource || (changedFrom && sameTags(resource.tags || [], changedFrom))); i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      resource = getResource(id);
+    }
+    // A template's tag change can reach the server after ours and wipe it again, so check back
+    // a couple of times and re-add anything that went missing.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt) {
+        await new Promise((r) => setTimeout(r, 1500));
+        resource = getResource(id);
+        if (!resource || resource.deletedAt) return;
+      }
+      const existing = (resource && resource.tags) || [];
+      const missing = add.filter((t) => !existing.includes(t));
+      if (!missing.length) {
+        if (attempt) return;
+        continue;
+      }
+      await adapter.updateResourceTags(id, [...existing, ...missing]);
+    }
   }
 
   function applyShortcut(tag, additive) {
@@ -1193,6 +1284,13 @@
     window.addEventListener("popstate", scheduleRender);
     // Store data (covers, tags, names) can change without touching the DOM, so poll lightly.
     setInterval(scheduleRender, 2000);
+    setInterval(() => {
+      try {
+        refreshFilterOnTagChange();
+      } catch (e) {
+        warn("refresh tag filter", e);
+      }
+    }, 750);
     scheduleRender();
   };
   if (document.body) start();

@@ -15,6 +15,7 @@ const DEFAULTS = {
   tabsMiddleClick: true,
   bulkSettings: true,
   tagPinsPerShortcut: false,
+  tagNewPages: true,
   recentPlacement: "bottom",
   recentTab: true,
   suggestPlacement: "tabs",

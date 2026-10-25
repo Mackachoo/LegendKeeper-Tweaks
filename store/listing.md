@@ -38,6 +38,7 @@ Learns how you move around your project (which pages you open after which, what 
 TAG SHORTCUTS: ONE WORLD, SEVERAL CAMPAIGNS
 Pin the tags you filter by most and switch with one click, with page counts on each. Turn on pinned page specific tags and each pinned page in LegendKeeper's shortcut bar gets its own set, so your Tuesday group's campaign and your Saturday group's campaign each show just their own sessions, NPCs and locations.
 • Drag a tag into the Project Browser to pin it
+• New pages you create while filtering by a pinned tag get that tag, so they don't disappear
 • Your tag filter stays selected after a reload
 
 FILTERS THAT KEEP YOUR TREE
