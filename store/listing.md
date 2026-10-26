@@ -26,6 +26,7 @@ It's for people who live in their LegendKeeper projects: running more than one c
 PAGE TABS: WORK ON SEVERAL THINGS AT ONCE
 Keep the session notes, the map, the NPC you're writing and the faction they belong to open side by side, and jump between them in one click instead of hunting through the tree each time.
 • Middle-click any page link, or right-click a page → Open in new tab
+• Pin a tab (right-click it) to keep a session plan or map in place: anything you open from it opens in a new tab
 • Drag to reorder; tabs are remembered for each project
 • Four tab styles (pills, filled, minimal, underline), optional adaptive-width tabs
 

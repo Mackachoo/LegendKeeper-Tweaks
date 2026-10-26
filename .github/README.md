@@ -23,6 +23,7 @@ Everything here is about usability: making LegendKeeper easier and quicker to ge
 - Navigating normally changes the page in the current tab, like a browser.
 - **Middle-click** any page link (Project Browser, @mentions, backlinks…) to open it in a new tab, or right-click a page in the tree and choose **Open in new tab**.
 - Opening a page that's already in a tab switches to that tab.
+- **Pin a tab** by right-clicking it. Pinned tabs sit at the front of the bar with a pin instead of ×, and keep their page: anything you open from a pinned tab (a link, the Project Browser, search) opens in a new tab next to it. Handy for a session plan or map you keep coming back to. The same menu has **Close tab** and **Close other tabs** (pinned tabs stay).
 - Close a tab with **×** or a middle-click. Drag tabs to reorder them; a bar on each side of the gap shows where it will land.
 - **Style**: Pills (default), Filled, Minimal or Underline. In every style the active tab is bold, and suggested and recent pages stay faint.
 - Tabs are remembered per project, so they survive a reload.

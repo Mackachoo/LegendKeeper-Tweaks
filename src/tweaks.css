@@ -375,6 +375,52 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
 .lkt-tab-active .lkt-tab-close:hover {
   background: hsl(var(--foreground) / 0.1);
 }
+/* Pinned tabs: a small pin where the × would be. */
+.lkt-tab-pin {
+  flex: none;
+  width: 18px;
+  font-size: 10px;
+  text-align: center;
+  opacity: 0.5;
+  transform: rotate(30deg);
+}
+.lkt-tab-active .lkt-tab-pin {
+  opacity: 0.75;
+}
+/* Right-click menu on a tab, styled like LegendKeeper's own menus. */
+.lkt-tabmenu {
+  position: fixed;
+  z-index: 2147483000;
+  min-width: 180px;
+  padding: 4px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--popover, var(--background)));
+  color: hsl(var(--popover-foreground, var(--foreground)));
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.6);
+  font-size: 13px;
+}
+.lkt-tabmenu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lkt-tabmenu-item:hover:not(:disabled) {
+  background: hsl(var(--accent));
+}
+.lkt-tabmenu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 /* Drop slot while dragging a tab: a bar on each side of the gap. */
 .lkt-drop-before::before,
 .lkt-drop-after::after {

@@ -7,6 +7,8 @@
 //   - middle-click any page link (tree, @mentions, backlinks, ...) to open it in a new tab
 //   - right-click a page in the tree → "Open in new tab"
 //   - × or middle-click a tab to close it; drag tabs to reorder
+//   - right-click a tab to pin it: pinned tabs sit at the front and keep their page, so anything
+//     you open from one opens in a new tab
 //   - optionally, recent pages fill the rest of the bar as faint "suggested" tabs; clicking one
 //     opens it as a real tab
 // Tabs are saved per project, so they survive reloads.
@@ -23,12 +25,20 @@
   function load() {
     const k = key();
     const v = k ? loadJSON(k, null) : null;
-    return v && Array.isArray(v.ids) ? { ids: v.ids.filter((x) => typeof x === "string"), active: v.active || null } : { ids: [], active: null };
+    if (!v || !Array.isArray(v.ids)) return { ids: [], active: null, pinned: [] };
+    const ids = v.ids.filter((x) => typeof x === "string");
+    const pinned = Array.isArray(v.pinned) ? v.pinned.filter((x) => ids.includes(x)) : [];
+    return { ids, active: v.active || null, pinned };
   }
   function save(state) {
     const k = key();
-    if (k) saveJSON(k, { ids: state.ids.slice(0, MAX_TABS), active: state.active });
+    if (!k) return;
+    // Pinned tabs always come first, in the order they're in.
+    const pinned = (state.pinned || []).filter((x) => state.ids.includes(x));
+    const ids = [...state.ids.filter((x) => pinned.includes(x)), ...state.ids.filter((x) => !pinned.includes(x))];
+    saveJSON(k, { ids: ids.slice(0, MAX_TABS), active: state.active, pinned });
   }
+  const isPinned = (state, rid) => (state.pinned || []).includes(rid);
 
   // Keep the active tab in step with whatever page LegendKeeper is showing.
   let lastSeen = null;
@@ -40,7 +50,10 @@
     const state = load();
     if (!state.ids.includes(rid)) {
       const i = state.ids.indexOf(state.active);
-      if (i >= 0) state.ids[i] = rid;
+      if (i >= 0 && isPinned(state, state.active)) {
+        // A pinned tab keeps its page: whatever you opened from it gets a new tab next to it.
+        insertAfterActive(state, rid);
+      } else if (i >= 0) state.ids[i] = rid;
       else state.ids.push(rid);
     }
     state.active = rid;
@@ -50,28 +63,50 @@
   // Like Chrome: background tabs opened from the same page line up in order after it.
   // Suggested/recent tabs (atEnd) always go at the end of the bar instead.
   let lastOpened = { from: null, id: null };
+  function insertAfterActive(state, rid) {
+    let after = lastOpened.from === state.active && state.ids.includes(lastOpened.id) ? lastOpened.id : state.active;
+    // New tabs never land among the pinned ones.
+    if (isPinned(state, after)) after = state.ids.filter((x) => isPinned(state, x)).pop();
+    const i = state.ids.indexOf(after);
+    state.ids.splice(i >= 0 ? i + 1 : state.ids.length, 0, rid);
+    lastOpened = { from: state.active, id: rid };
+  }
   function openInNewTab(rid, { atEnd = false } = {}) {
     const state = load();
     if (state.ids.includes(rid)) return;
-    if (atEnd) {
-      state.ids.push(rid);
-    } else {
-      const after = lastOpened.from === state.active && state.ids.includes(lastOpened.id) ? lastOpened.id : state.active;
-      const i = state.ids.indexOf(after);
-      state.ids.splice(i >= 0 ? i + 1 : state.ids.length, 0, rid);
-      lastOpened = { from: state.active, id: rid };
-    }
+    if (atEnd) state.ids.push(rid);
+    else insertAfterActive(state, rid);
     if (state.ids.length > MAX_TABS) state.ids = state.ids.slice(0, MAX_TABS);
     save(state);
     LKT.render();
   }
   LKT.openInNewTab = openInNewTab;
 
+  function togglePin(rid) {
+    const state = load();
+    if (!state.ids.includes(rid)) return;
+    state.pinned = isPinned(state, rid) ? state.pinned.filter((x) => x !== rid) : [...state.pinned, rid];
+    save(state);
+    LKT.render();
+  }
+
+  function closeOthers(rid) {
+    const state = load();
+    state.ids = state.ids.filter((x) => x === rid || isPinned(state, x));
+    if (!state.ids.includes(state.active)) {
+      state.active = rid;
+      save(state);
+      navigateToResource(rid);
+    } else save(state);
+    LKT.render();
+  }
+
   function closeTab(rid) {
     const state = load();
     const i = state.ids.indexOf(rid);
     if (i < 0 || state.ids.length <= 1) return;
     state.ids.splice(i, 1);
+    state.pinned = state.pinned.filter((x) => x !== rid);
     if (state.active === rid) {
       state.active = state.ids[Math.min(i, state.ids.length - 1)];
       save(state);
@@ -82,6 +117,7 @@
     LKT.render();
   }
 
+  // Pinned and unpinned tabs each reorder among themselves; save() keeps pinned ones first.
   function moveTab(rid, beforeRid) {
     const state = load();
     state.ids = state.ids.filter((x) => x !== rid);
@@ -120,6 +156,7 @@
       strip.setAttribute("role", "tablist");
       strip.addEventListener("click", onClick);
       strip.addEventListener("auxclick", onAuxClick);
+      strip.addEventListener("contextmenu", onContextMenu);
       strip.addEventListener("mousedown", (e) => e.button === 1 && e.preventDefault());
       strip.addEventListener("dragstart", onDragStart);
       strip.addEventListener("dragover", onDragOver);
@@ -159,17 +196,18 @@
     };
     if (LKT.placementOf?.("suggested") === "tabs" && LKT.util.suggestedPages) addGhosts("suggested", LKT.util.suggestedPages(10));
     if (LKT.placementOf?.("recent") === "tabs") addGhosts("recent", recentPages(12));
-    const sig = JSON.stringify([pid, state.active, tabs.map(({ id, r }) => [id, r.name, r.iconGlyph, r.iconColor]), ghosts.map(({ id, r, kind }) => [id, r.name, kind])]);
+    const sig = JSON.stringify([pid, state.active, state.pinned, tabs.map(({ id, r }) => [id, r.name, r.iconGlyph, r.iconColor]), ghosts.map(({ id, r, kind }) => [id, r.name, kind])]);
     if (el.dataset.sig === sig) return;
     el.dataset.sig = sig;
     el.replaceChildren();
     for (const { id, r } of tabs) {
       const a = document.createElement("a");
-      a.className = "lkt-tab" + (id === state.active ? " lkt-tab-active" : "");
+      const pinned = isPinned(state, id);
+      a.className = "lkt-tab" + (id === state.active ? " lkt-tab-active" : "") + (pinned ? " lkt-tab-pinned" : "");
       a.href = `/a/${pid}/${id}`;
       a.draggable = true;
       a.dataset.lktTab = id;
-      a.title = r.name;
+      a.title = pinned ? `${r.name} (pinned)` : r.name;
       a.setAttribute("role", "tab");
       a.setAttribute("aria-selected", id === state.active ? "true" : "false");
       const icon = document.createElement("i");
@@ -177,7 +215,10 @@
       if (r.iconColor && !/^#?fff(fff)?$/i.test(r.iconColor)) icon.style.color = r.iconColor;
       const label = Object.assign(document.createElement("span"), { className: "lkt-tab-label", textContent: r.name });
       a.append(icon, label);
-      if (tabs.length > 1) {
+      if (pinned) {
+        const pin = Object.assign(document.createElement("i"), { className: "lkt-tab-pin fas fa-thumbtack", title: "Pinned: pages you open from here open in a new tab" });
+        a.append(pin);
+      } else if (tabs.length > 1) {
         const x = Object.assign(document.createElement("span"), { className: "lkt-tab-close", textContent: "×", title: "Close tab" });
         x.dataset.lktClose = id;
         a.append(x);
@@ -242,7 +283,54 @@
     const tab = e.button === 1 && e.target.closest("[data-lkt-tab]");
     if (!tab) return;
     e.preventDefault();
-    closeTab(tab.dataset.lktTab);
+    if (!tab.classList.contains("lkt-tab-pinned")) closeTab(tab.dataset.lktTab);
+  }
+
+  // Right-click a tab: pin / unpin, close, close others.
+  let menu = null;
+  function closeMenu() {
+    if (!menu) return;
+    menu.remove();
+    menu = null;
+    document.removeEventListener("pointerdown", onOutside, true);
+    document.removeEventListener("keydown", onMenuKey, true);
+    window.removeEventListener("blur", closeMenu);
+  }
+  const onOutside = (e) => menu && !menu.contains(e.target) && closeMenu();
+  const onMenuKey = (e) => e.key === "Escape" && closeMenu();
+  function onContextMenu(e) {
+    const tab = e.target.closest("[data-lkt-tab]");
+    if (!tab) return;
+    e.preventDefault();
+    closeMenu();
+    const rid = tab.dataset.lktTab;
+    const state = load();
+    const pinned = isPinned(state, rid);
+    const items = [
+      [pinned ? "Unpin tab" : "Pin tab", "fas fa-thumbtack", () => togglePin(rid)],
+      ["Close tab", "fas fa-xmark", () => closeTab(rid), state.ids.length <= 1],
+      ["Close other tabs", "fas fa-clone", () => closeOthers(rid), state.ids.every((x) => x === rid || isPinned(state, x))],
+    ];
+    menu = Object.assign(document.createElement("div"), { className: "lkt-tabmenu" });
+    menu.dataset.lktOwn = "";
+    menu.setAttribute("role", "menu");
+    for (const [label, icon, run, disabled] of items) {
+      const b = Object.assign(document.createElement("button"), { type: "button", className: "lkt-tabmenu-item", disabled: !!disabled });
+      b.setAttribute("role", "menuitem");
+      b.append(Object.assign(document.createElement("i"), { className: `${icon} lkt-menu-icon` }), label);
+      b.addEventListener("click", () => {
+        closeMenu();
+        run();
+      });
+      menu.append(b);
+    }
+    document.body.append(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = `${Math.min(e.clientX, innerWidth - r.width - 8)}px`;
+    menu.style.top = `${Math.min(e.clientY, innerHeight - r.height - 8)}px`;
+    document.addEventListener("pointerdown", onOutside, true);
+    document.addEventListener("keydown", onMenuKey, true);
+    window.addEventListener("blur", closeMenu);
   }
   // Dragging tabs: the drop slot is the gap nearest the pointer (left or right half of a tab).
   // It's marked on both sides: the right edge of the tab before it and the left edge of the tab
