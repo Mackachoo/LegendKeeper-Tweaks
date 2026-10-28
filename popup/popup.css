@@ -60,6 +60,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.close {
+  display: none;
+}
+
 header {
   display: flex;
   align-items: center;
@@ -300,4 +304,94 @@ footer {
 }
 .subs .hint.row[hidden] {
   display: none;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Embedded in LegendKeeper's top bar: match its own side panels (Members, Activity, Share).
+   The frosted frame comes from the host page; here we match the header, section labels and
+   soft rounded rows without borders.
+   --------------------------------------------------------------------------------------------- */
+html[data-embedded] body {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.011em;
+}
+html[data-embedded] header {
+  min-height: 52px;
+  gap: 8px;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 0;
+}
+html[data-embedded] header img {
+  width: 18px;
+  height: 18px;
+}
+html[data-embedded] h1 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.44px;
+}
+html[data-embedded] .close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms;
+}
+html[data-embedded] .close:hover {
+  background: hsl(var(--foreground) / 0.06);
+  color: hsl(var(--foreground));
+}
+html[data-embedded] main {
+  padding: 0 8px;
+}
+html[data-embedded] h2 {
+  margin: 0;
+  padding: 12px 8px 4px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+html[data-embedded] .card {
+  border: 0;
+  border-radius: 8px;
+  background: hsl(var(--foreground) / 0.04);
+}
+html[data-embedded] .card + .card {
+  margin-top: 4px;
+}
+html[data-embedded] .row {
+  padding: 8px;
+  border-radius: 8px;
+}
+html[data-embedded] .row + .row,
+html[data-embedded] .subs .row + .row {
+  border-top: 0;
+}
+html[data-embedded] label.row:hover {
+  background: hsl(var(--foreground) / 0.06);
+}
+html[data-embedded] .subs {
+  border-top: 0;
+  background: none;
+}
+html[data-embedded] .subs .row {
+  padding-left: 18px;
+}
+html[data-embedded] .title {
+  font-size: 14px;
+}
+html[data-embedded] .select {
+  border-color: hsl(var(--foreground) / 0.08);
+  background-color: hsl(var(--foreground) / 0.06);
+}
+html[data-embedded] footer {
+  margin: 12px 16px 16px;
 }

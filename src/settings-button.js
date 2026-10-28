@@ -32,6 +32,7 @@
     return null;
   }
 
+  let shareClasses = "";
   function ensureButton() {
     const share = findShare();
     if (!share) return;
@@ -48,8 +49,11 @@
       const img = Object.assign(document.createElement("img"), { src: ICON_URL, alt: "", width: 18, height: 18 });
       button.append(img);
     }
-    // Borrow Share's own classes so the button matches the top bar exactly.
-    const cls = `${share.className} lkt-settings-button`;
+    // Borrow Share's own classes so the button matches the top bar exactly. While Share's popover
+    // is open it swaps its hover classes for a highlighted background, so only copy its resting
+    // look (the one with hover styles) and keep the last one otherwise.
+    if (/(^|\s)hover:/.test(share.className)) shareClasses = share.className;
+    const cls = `${shareClasses || share.className} lkt-settings-button`;
     if (button.className !== cls) button.className = cls;
     if (button.nextElementSibling !== share) share.before(button);
   }
@@ -60,8 +64,17 @@
       : "light";
   }
 
+  // LegendKeeper's own top-bar panels (chat, alerts, members, Share) are side drawers with an ×.
+  // Close any that are open so ours takes their place, like they replace each other.
+  function closeLegendKeeperPanels() {
+    for (const drawer of document.querySelectorAll(".z-drawer")) {
+      drawer.querySelector("button svg.lucide-x")?.closest("button")?.click();
+    }
+  }
+
   function openPanel() {
     if (!alive()) return retire();
+    closeLegendKeeperPanels();
     panel = document.createElement("div");
     panel.className = "lkt-settings-panel";
     panel.setAttribute("role", "dialog");
@@ -91,10 +104,11 @@
 
   function position() {
     if (!panel || !button) return;
-    const r = button.getBoundingClientRect();
-    panel.style.top = `${Math.round(r.bottom + 8)}px`;
-    panel.style.right = `${Math.max(8, Math.round(window.innerWidth - r.right))}px`;
-    panel.style.maxHeight = `${Math.max(200, window.innerHeight - r.bottom - 24)}px`;
+    // Same spot as LegendKeeper's panels: 12px from the right, just under the top bar.
+    const top = 56;
+    panel.style.top = `${top}px`;
+    panel.style.right = "12px";
+    panel.style.maxHeight = `${Math.max(200, window.innerHeight - top - 16)}px`;
   }
 
   const onOutside = (e) => {

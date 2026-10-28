@@ -144,6 +144,19 @@
   transform: translate(-50%, 0);
 }
 
+/* Frosted surfaces, matching LegendKeeper's own panels (Members, Activity): a translucent
+   popover colour over a strong blur, a hairline border and a soft drop shadow. */
+.lkt-settings-panel,
+.lkt-tabmenu,
+.lkt-cover-card,
+.lkt-dialog {
+  border: 1px solid hsl(var(--border, 202 6% 17%));
+  background: hsl(var(--popover, 240 6% 10%) / 0.8);
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
 /* Settings button in LegendKeeper's top bar (next to Share) and its popover. */
 .lkt-settings-button {
   height: 36px;
@@ -163,17 +176,16 @@
   position: fixed;
   z-index: 2147483000;
   display: flex;
-  width: 340px;
+  width: 338px;
   overflow: hidden;
-  border: 1px solid hsl(202 6% 17%);
-  border-radius: 0.5rem;
-  background: hsl(210 7% 11%);
-  box-shadow: 0 10px 38px -10px rgb(0 0 0 / 0.5), 0 10px 20px -15px rgb(0 0 0 / 0.4);
+  border-color: rgb(41 44 46);
+  border-radius: 16px;
+  background: rgb(24 24 27 / 0.8);
   animation: lkt-pop 120ms ease-out;
 }
 .lkt-settings-panel[data-theme="light"] {
   border-color: hsl(240 5.9% 90%);
-  background: #fff;
+  background: rgb(255 255 255 / 0.8);
 }
 .lkt-settings-panel iframe {
   flex: 1;
@@ -392,12 +404,9 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   position: fixed;
   z-index: 2147483000;
   min-width: 180px;
-  padding: 4px;
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-  background: hsl(var(--popover, var(--background)));
+  padding: 6px;
+  border-radius: 12px;
   color: hsl(var(--popover-foreground, var(--foreground)));
-  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.6);
   font-size: 13px;
 }
 .lkt-tabmenu-item {
@@ -407,7 +416,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   width: 100%;
   padding: 6px 8px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 8px;
   background: none;
   color: inherit;
   font: inherit;
@@ -415,7 +424,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   cursor: pointer;
 }
 .lkt-tabmenu-item:hover:not(:disabled) {
-  background: hsl(var(--accent));
+  background: hsl(var(--foreground) / 0.06);
 }
 .lkt-tabmenu-item:disabled {
   opacity: 0.4;
@@ -446,10 +455,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   z-index: 2147483000;
   width: 220px;
   overflow: hidden;
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--background));
-  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.5);
+  border-radius: 12px;
   opacity: 0;
   pointer-events: none;
   transform: translateX(-4px);
@@ -526,10 +532,7 @@ div:has(> .lkt-tabs) > .resource-view-wrapper > .fixed.z-40 {
   max-height: 85vh;
   margin: 0;
   overflow: hidden;
-  border: 1px solid hsl(var(--border));
-  border-radius: 12px;
-  background: hsl(var(--background));
-  box-shadow: 0 24px 64px -16px rgb(0 0 0 / 0.6);
+  border-radius: 16px;
   color: hsl(var(--foreground));
   font-size: 14px;
 }

@@ -39,6 +39,7 @@ if (params.has("embedded")) {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") parent.postMessage({ lkt: "close" }, "*");
   });
+  document.getElementById("close").addEventListener("click", () => parent.postMessage({ lkt: "close" }, "*"));
 }
 
 const inputs = [...document.querySelectorAll("input[data-key], select[data-key]")];
