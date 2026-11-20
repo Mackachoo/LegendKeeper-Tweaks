@@ -32,11 +32,10 @@
 
   function injectMenuItems() {
     if (!menuResourceId) return;
-    const menu = document.querySelector(
-      '[data-insp-path*="ContextMenu/index.tsx"] div[data-insp-path*="ResourceTree/ResourceTreeItem.tsx"].w-56',
-    );
+    // The Project Browser's page menu (it's the one with "Create sub-page").
+    const menu = document.querySelector('[data-testid="context-menu"] div.w-56:has(> [data-testid="context-menu-new-page"])');
     if (!menu || menu.querySelector("[data-lkt-menu]")) return;
-    const sample = [...menu.children].find((c) => c.classList.contains("rounded-sm") && !c.getAttribute("role"));
+    const sample = menu.querySelector(':scope > [role="menuitem"]:not(:has([role="menu"]))');
     const sep = [...menu.children].find((c) => c.classList.contains("h-px"));
     const rid = menuResourceId;
 

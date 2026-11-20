@@ -135,9 +135,8 @@
   // as its first child; tweaks.css turns that column vertical so the page sits under the strip.
   function findContentHost() {
     const view = document.querySelector(".resource-view-wrapper");
-    return view && view.parentElement && view.parentElement.matches('[data-insp-path*="LayoutManager/index.tsx"]')
-      ? view.parentElement
-      : null;
+    const host = view && view.parentElement;
+    return host && host !== document.body && host.matches("div.flex") ? host : null;
   }
 
   // The page's own sidebar is position:fixed under the top bar. tweaks.css moves it down to

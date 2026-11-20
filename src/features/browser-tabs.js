@@ -38,7 +38,7 @@
   let openKey = null;
 
   function findTabList() {
-    return document.querySelector('[role="tablist"][data-insp-path*="ResourceBrowser/index.tsx"]');
+    return document.querySelector('[data-testid="sidebar"] [role="tablist"]:has([data-testid="sidebar-tab-project"])');
   }
 
   function setOpen(key) {
@@ -160,8 +160,8 @@
     "pointerdown",
     (e) => {
       if (!openKey || !(e.target instanceof Element)) return;
-      const tab = e.target.closest('[role="tablist"] [role="tab"], [role="tablist"] [data-insp-path*="TemplatesTabContent"]');
-      if (tab && !tab.dataset.lktBrowserTab && tab.closest('[data-insp-path*="ResourceBrowser/index.tsx"]')) setOpen(null);
+      const tab = e.target.closest('[role="tablist"] [role="tab"]');
+      if (tab && !tab.dataset.lktBrowserTab && tab.closest('[data-testid="sidebar"]')) setOpen(null);
     },
     true,
   );

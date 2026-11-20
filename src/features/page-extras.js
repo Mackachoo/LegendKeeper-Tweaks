@@ -110,14 +110,14 @@
 
   function mainEditor() {
     for (const pm of document.querySelectorAll(".ProseMirror")) {
-      if (pm.closest('[data-insp-path*="EditorView.tsx"]') && !pm.closest('[data-insp-path*="KeyValueRow"]')) return pm;
+      if (pm.closest(".resource-view-wrapper .editor-view-container") && !pm.closest('[data-testid="property-bar"]')) return pm;
     }
     return null;
   }
 
   // Sits at the right end of the page title row, clear of the page menu buttons above it.
   function renderReadingTime() {
-    const titleRow = document.querySelector('.resource-view-wrapper [data-insp-path*="ResourceTitle/index.tsx"].resource-title');
+    const titleRow = document.querySelector(".resource-view-wrapper .resource-title");
     const pm = settings().readingTime ? mainEditor() : null;
     // Counting words is cheap, but don't do it more than once a second.
     const now = Date.now();

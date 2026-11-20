@@ -87,9 +87,10 @@
     {
       name: "nested-tag-filter",
       gate: "lk:tree-filter-rule",
-      // te=null!==e8,tt=(0,a.useMemo)(()=>{if(!te)return e9;
-      re: /(\w+)=null!==(\w+),(\w+)=\(0,(\w+)\.useMemo\)\(\(\)=>\{if\(!\1\)return (\w+);/,
-      replace: (m, isFiltering, matches, _tree, _react, baseTree) =>
+      // tg=(0,s.useMemo)(()=>{if(!tc)return ti;let e={root:{id:"root",children:to,...
+      // (filtered tree = flat list of the matching ids `to`; `ti` = the full tree)
+      re: /([\w$]+)=\(0,([\w$]+)\.useMemo\)\(\(\)=>\{if\(!([\w$]+)\)return ([\w$]+);let [\w$]+=\{root:\{id:"root",children:([\w$]+),/,
+      replace: (m, _tree, _react, isFiltering, baseTree, matches) =>
         m.replace(
           `if(!${isFiltering})`,
           `{const __lkt=window.__LKT&&window.__LKT.nestFilter(${isFiltering}?${matches}:null,${baseTree});if(__lkt)return __lkt;}if(!${isFiltering})`,
@@ -100,7 +101,7 @@
       gate: "lk:tree-filter-rule",
       // expandStates:te?void 0:e1 — while filtering LegendKeeper drops your expand state, so every
       // folder is forced open and can't be collapsed. With the nested filter on, keep it.
-      re: /expandStates:(\w+)\?void 0:(\w+)/,
+      re: /expandStates:([\w$]+)\?void 0:([\w$]+)/,
       replace: (m, isFiltering, expandStates) =>
         `expandStates:${isFiltering}&&!(window.__LKT&&window.__LKT.nestActive)?void 0:${expandStates}`,
     },
@@ -108,7 +109,8 @@
       name: "expose-tag-filter",
       gate: "lk:tree-filter-rule",
       // [Y,Q]=(0,a.useState)([]),[J,Z]=(0,a.useState)("")   (tags, setTags, nameFilter, setNameFilter)
-      re: /\[(\w+),(\w+)\]=\(0,(\w+)\.useState\)\(\[\]\),\[(\w+),(\w+)\]=\(0,\3\.useState\)\(""\)/,
+      // Since late 2026 a page-type filter state sits between them: [ee,et]=…([]),[er,es]=…([]),[en,ea]=…("")
+      re: /\[([\w$]+),([\w$]+)\]=\(0,([\w$]+)\.useState\)\(\[\]\),(?:\[[\w$]+,[\w$]+\]=\(0,\3\.useState\)\(\[\]\),)?\[([\w$]+),([\w$]+)\]=\(0,\3\.useState\)\(""\)/,
       replace: (m, tags, setTags) =>
         `${m},__lktTagBind=window.__LKT&&window.__LKT.bindTagFilter(${tags},${setTags})`,
     },
@@ -116,31 +118,31 @@
       name: "expose-entity-store",
       gate: "lk:tree-filter-rule",
       // let n=(0,F.useEntityStore)(),o=(0,N.default)(),l=(0,I.useProjectSubscription)()
-      re: /let (\w+)=\(0,\w+\.useEntityStore\)\(\),\w+=\(0,\w+\.default\)\(\),\w+=\(0,\w+\.useProjectSubscription\)\(\)/,
+      re: /let ([\w$]+)=\(0,[\w$]+\.useEntityStore\)\(\),[\w$]+=\(0,[\w$]+\.default\)\(\),[\w$]+=\(0,[\w$]+\.useProjectSubscription\)\(\)/,
       replace: (m, store) => `${m},__lktStoreBind=window.__LKT&&window.__LKT.bindStore(${store})`,
     },
     {
       name: "expose-navigate",
       gate: "lk:tree-filter-rule",
       // ex=(0,eb.useNavigateInProject)()   — the same function LegendKeeper's shortcut bar uses
-      re: /(\w+)=\(0,\w+\.useNavigateInProject\)\(\)/,
+      re: /([\w$]+)=\(0,[\w$]+\.useNavigateInProject\)\(\)/,
       replace: (m, nav) => `${m},__lktNavBind=window.__LKT&&window.__LKT.bindNavigate(${nav})`,
     },
     {
       name: "expose-adapter",
       gate: "lk:tree-filter-rule",
       // key:`wiki-tree-expand-state:${o}`,reducer:E}),e3=(0,z.useAdapterOrNull)()
-      re: /(wiki-tree-expand-state:\$\{\w+\}`,reducer:\w+\}\),)(\w+)(=\(0,\w+\.useAdapterOrNull\)\(\))/,
+      re: /(wiki-tree-expand-state:\$\{[\w$]+\}`,reducer:[\w$]+\}\),)([\w$]+)(=\(0,[\w$]+\.useAdapterOrNull\)\(\))/,
       replace: (m, pre, adapter, post) =>
         `${pre}${adapter}${post},__lktAdapterBind=window.__LKT&&window.__LKT.bindAdapter(${adapter})`,
     },
     {
       name: "nested-filter-drag",
-      // In the Project Browser tree: dragEnabled:p&&!f — LegendKeeper switches tree dragging off while
+      // In the Project Browser tree: dragEnabled:f&&!p — LegendKeeper switches tree dragging off while
       // filtering, but the rows stay draggable, so drops there act on stale positions and can move
       // the wrong page. The nested filter shows the real tree, so turn dragging back on for it.
-      gate: /ResourceTree\/index\.tsx:\d+:\d+:ContextMenu"/,
-      re: /dragEnabled:(\w+)&&!(\w+),draggableContainerClass:/,
+      gate: '"data-testid":"resource-tree",children:',
+      re: /dragEnabled:([\w$]+)&&!([\w$]+),draggableContainerClass:/,
       replace: (m, canDrag, isFiltering) =>
         `dragEnabled:${canDrag}&&(!${isFiltering}||!!(window.__LKT&&window.__LKT.nestActive)),draggableContainerClass:`,
     },
@@ -149,15 +151,15 @@
       gate: "lk:tree-filter-rule",
       // el=(0,F.useUiStore)(e=>e.rootResourceId),ep=(0,F.useUiStore)(e=>e.setRootResourceId) — the
       // page LegendKeeper's shortcut bar has narrowed the tree to (null for all pages).
-      re: /(\w+)=\(0,(\w+)\.useUiStore\)\((\w+)=>\3\.rootResourceId\),(\w+)=\(0,\2\.useUiStore\)\(\w+=>\w+\.setRootResourceId\)/,
+      re: /([\w$]+)=\(0,([\w$]+)\.useUiStore\)\(([\w$]+)=>\3\.rootResourceId\),([\w$]+)=\(0,\2\.useUiStore\)\([\w$]+=>[\w$]+\.setRootResourceId\)/,
       replace: (m, root) => `${m},__lktRootBind=window.__LKT&&window.__LKT.bindRoot(${root})`,
     },
     {
       name: "expose-tree-expand",
       // In the Project Browser tree: ({...,expandAll:O,collapseAll:P,prefetchChildren:...}) — the same
       // functions as LegendKeeper's own right-click "Expand all" / "Collapse all".
-      gate: /expandAll:\w+,collapseAll:\w+,prefetchChildren:/,
-      re: /expandAll:(\w+),collapseAll:(\w+),prefetchChildren:/,
+      gate: /expandAll:[\w$]+,collapseAll:[\w$]+,prefetchChildren:/,
+      re: /expandAll:([\w$]+),collapseAll:([\w$]+),prefetchChildren:/,
       replace: (m, expand, collapse) =>
         `expandAll:(window.__LKT&&window.__LKT.bindTree(${expand},${collapse}),${expand}),collapseAll:${collapse},prefetchChildren:`,
     },
@@ -625,15 +627,11 @@
   }
 
   // --- locating LegendKeeper UI --------------------------------------------------------------
-  // LegendKeeper ships `data-insp-path="<source file>:<line>:<col>:<element>"` attributes in
-  // production, which gives us far more stable hooks than its utility-class names.
-  const SHORTCUTS_AND_TAGS = "ResourceBrowser/ShortcutsAndTags.tsx";
-
+  // The Project Browser's filter block: the "Find by name or #tag" box, LegendKeeper's shortcut
+  // bar and the pills for selected tags all sit in one column under the Project/Templates tabs.
   function findSidebarFilterArea() {
-    for (const el of document.querySelectorAll(`[data-insp-path*="${SHORTCUTS_AND_TAGS}"]`)) {
-      if (el.classList.contains("flex-col")) return el;
-    }
-    return null;
+    const input = document.querySelector('[data-testid="sidebar"] input[placeholder^="Find by name"]');
+    return (input && input.closest("div.flex-col")) || null;
   }
   function findFilterInput() {
     const area = findSidebarFilterArea();
@@ -643,14 +641,18 @@
   // Marks tag chips that can use native HTML drag (they have no drag behaviour of their own).
   function markTagSources(root) {
     // Active filter pills in the Project Browser: <div class="... rounded-full ..."><span>tag</span><button>×</button></div>
-    for (const pill of root.querySelectorAll(`div.rounded-full[data-insp-path*="${SHORTCUTS_AND_TAGS}"]`)) {
-      const span = pill.querySelector(":scope > span");
-      if (span) mark(pill, span.textContent);
+    const area = findSidebarFilterArea();
+    if (area) {
+      for (const pill of area.querySelectorAll("div.rounded-full")) {
+        if (pill.closest("[data-lkt-own]")) continue;
+        const span = pill.querySelector(":scope > span");
+        if (span) mark(pill, span.textContent);
+      }
     }
-    // Options in the tag filter dropdown (cmdk items).
-    for (const item of root.querySelectorAll('[cmdk-item][data-insp-path*="filter-search-input.tsx"]')) {
-      const spans = item.querySelectorAll(":scope > span");
-      mark(item, spans.length ? spans[spans.length - 1].textContent : item.textContent);
+    // Suggestions under the filter box while typing "#…": <div><span>#</span>Tag name</div>
+    for (const item of root.querySelectorAll(".z-dropdown .max-h-48 > div")) {
+      const hash = item.firstElementChild;
+      if (hash && hash.tagName === "SPAN" && hash.textContent.trim() === "#") mark(item, item.textContent.replace(/^\s*#/, ""));
     }
   }
   function mark(el, name) {
@@ -664,10 +666,9 @@
   // natively draggable. Instead we watch the pointer: if a drag that started on a page tag ends
   // over the Project Browser filter area, add a shortcut. LegendKeeper's reordering keeps working.
   function pageTagName(target) {
-    const chip = target instanceof Element && target.closest('[data-insp-path*="sortable-tag.tsx"]');
+    const chip = target instanceof Element && target.closest('[data-testid="property-bar"] [aria-roledescription] div.rounded-full');
     if (!chip || target.closest("button")) return null;
-    const label =
-      chip.querySelector('span[data-insp-path*="multi-select.tsx"]') || chip.querySelector("span.text-foreground");
+    const label = chip.querySelector("span.text-foreground");
     const text = ((label || chip).textContent || "").replace(/×/g, "").trim();
     return text || null;
   }
@@ -1139,7 +1140,7 @@
   };
   let treeButtons = null;
   function renderTreeButtons(area) {
-    const box = area && area.querySelector('[data-insp-path*="filter-search-input.tsx"]:has(> input)');
+    const box = area && area.querySelector("div:has(> input)");
     if (!settings().treeExpandButtons || !box || !tree.expand) {
       treeButtons?.remove();
       return;

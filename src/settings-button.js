@@ -3,7 +3,6 @@
 (() => {
   const EXT_ORIGIN = new URL(chrome.runtime.getURL("")).origin;
   const ICON_URL = chrome.runtime.getURL("icons/icon32.png");
-  const NAVBAR = "views/project/components/NavBar/index.tsx";
 
   let button = null;
   let panel = null;
@@ -26,10 +25,7 @@
   }
 
   function findShare() {
-    for (const el of document.querySelectorAll(`button[data-insp-path*="${NAVBAR}"]`)) {
-      if (el.textContent.trim() === "Share") return el;
-    }
-    return null;
+    return document.querySelector('[data-testid="navbar"] [data-testid="share-button"]');
   }
 
   let shareClasses = "";
