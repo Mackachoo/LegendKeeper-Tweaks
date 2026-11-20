@@ -474,27 +474,56 @@
   // The pinned page LegendKeeper's shortcut bar is showing (null = all pages). Only changes when
   // a shortcut is clicked, not when you visit a page.
   let shortcutRoot = null;
+  // The first value for a project is where it opened, not a switch.
+  let rootProject = null;
   LKT.bindRoot = (root) => {
+    const first = rootProject !== projectId();
+    rootProject = projectId();
     if ((root || null) !== shortcutRoot) {
       const previous = shortcutRoot;
       shortcutRoot = root || null;
-      clearPinnedFilterTags(previous);
+      if (!first) switchPinnedFilterTags(previous, shortcutRoot);
       scheduleRender();
     }
     return 0;
   };
-  // With pinned page specific tags, switching pinned page turns off any active filter tags that
-  // came from the previous page's pins (they're no longer shown). Tags picked from the search box
-  // stay. Deferred so we never set state mid-render.
-  function clearPinnedFilterTags(previousRoot) {
+  // With pinned page specific tags, each pinned page also remembers which of its pinned tags were
+  // on. Switching pinned page turns the old page's pinned tags off (remembering them) and turns
+  // the new page's remembered ones back on. Tags picked from the search box stay.
+  // Until the old pins are off they still count as pinned, so LegendKeeper's own pill for them
+  // doesn't flash up under the filter box for a frame.
+  let leavingPins = [];
+  const activePinsKey = (root) => {
+    const pid = projectId();
+    return pid ? `lkt:active-pins:${pid}:root:${root || "all"}` : null;
+  };
+  function pinsOf(root) {
+    const key = shortcutsKey(root);
+    const v = key ? loadJSON(key, []) : [];
+    return Array.isArray(v) ? v.filter((t) => typeof t === "string") : [];
+  }
+  function switchPinnedFilterTags(previousRoot, nextRoot) {
     if (!settings().tagPinsPerShortcut || !tagFilter.set) return;
-    const key = shortcutsKey(previousRoot);
-    const pins = key ? loadJSON(key, []) : [];
-    if (!Array.isArray(pins) || !pins.length) return;
+    const oldPins = pinsOf(previousRoot);
+    const newPins = pinsOf(nextRoot);
     const set = tagFilter.set;
+    leavingPins = oldPins;
+    // Deferred so we never set state mid-render.
     setTimeout(() => {
-      const kept = (tagFilter.tags || []).filter((t) => !pins.includes(t));
-      if (kept.length !== (tagFilter.tags || []).length) set(kept);
+      const current = tagFilter.tags || [];
+      const prevKey = activePinsKey(previousRoot);
+      if (prevKey) saveJSON(prevKey, current.filter((t) => oldPins.includes(t)));
+      const nextKey = activePinsKey(nextRoot);
+      const saved = nextKey ? loadJSON(nextKey, []) : [];
+      const restore = (Array.isArray(saved) ? saved : []).filter((t) => newPins.includes(t));
+      const kept = current.filter((t) => !oldPins.includes(t));
+      const next = [...kept, ...restore.filter((t) => !kept.includes(t))];
+      if (next.length !== current.length || next.some((t, i) => t !== current[i])) set(next);
+      // Let LegendKeeper redraw without them before the pills are allowed back.
+      setTimeout(() => {
+        leavingPins = [];
+        scheduleRender();
+      }, 100);
     }, 0);
   }
   // With "Pinned page specific tags" on, each pinned page has its own tag pins; "all pages"
@@ -849,13 +878,24 @@
     const list = loadShortcuts();
     // A pinned tag that's active already shows as selected here, so hide LegendKeeper's duplicate
     // pill for it under the filter box. Pills for other tags stay.
+    // Its row goes too when nothing else is left in it, or the empty row adds a gap.
+    const hidden = [...new Set([...list, ...leavingPins])];
+    const pinned = hidden.map((t) => `[data-lkt-tag=${cssString(t)}]`).join(",");
     setStyle(
       "pinned-pills",
-      list.length
-        ? `${list.map((t) => `div.rounded-full[data-lkt-tag=${cssString(t)}]`).join(",\n")}{display:none!important}`
+      hidden.length
+        ? `div.rounded-full:is(${pinned}){display:none!important}\n` +
+            `div.flex-wrap:has(> div.rounded-full):not(:has(> div.rounded-full:not(:is(${pinned})))){display:none!important}`
         : "",
     );
     const active = new Set(tagFilter.tags || []);
+    // LegendKeeper's "Clear filter" × is for searches and picked tags; a pinned tag is turned off
+    // by clicking it again, so hide the × while only pinned tags are active.
+    const input = findFilterInput();
+    area.classList.toggle(
+      "lkt-pins-only",
+      !!input && !input.value.trim() && active.size > 0 && [...active].every((t) => hidden.includes(t)),
+    );
     const counts = s.tagCounts ? tagCounts() : null;
     const sig = JSON.stringify([list, [...active], !!draggingTag, counts && list.map((t) => counts.get(t) || 0)]);
     row.hidden = !list.length && !draggingTag;
@@ -881,7 +921,10 @@
         if (counts) {
           b.append(Object.assign(document.createElement("span"), { className: "lkt-count", textContent: counts.get(tag) || 0 }));
         }
-        const x = Object.assign(document.createElement("span"), { className: "lkt-remove", textContent: "×", title: "Remove tag shortcut" });
+        // Same corner × as LegendKeeper's pinned pages; hovering it outlines the tag in red.
+        const x = Object.assign(document.createElement("span"), { className: "lkt-remove", title: "Unpin tag" });
+        x.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
         x.dataset.lktRemove = tag;
         b.append(x);
         row.appendChild(b);
@@ -945,25 +988,7 @@
     if (rm) {
       e.preventDefault();
       e.stopPropagation();
-      // Two clicks to unpin, so a stray click doesn't lose a pin: the first arms it ("Remove?"),
-      // a second within a few seconds removes it.
-      if (rm.dataset.armed) {
-        removeShortcut(rm.dataset.lktRemove);
-        return;
-      }
-      rm.dataset.armed = "1";
-      rm.textContent = "Remove?";
-      rm.title = "Click again to unpin this tag";
-      rm.closest(".lkt-tag-shortcut")?.classList.add("lkt-confirming");
-      const disarm = () => {
-        if (!rm.isConnected || !rm.dataset.armed) return;
-        delete rm.dataset.armed;
-        rm.textContent = "×";
-        rm.title = "Remove tag shortcut";
-        rm.closest(".lkt-tag-shortcut")?.classList.remove("lkt-confirming");
-      };
-      setTimeout(disarm, 3000);
-      rm.closest(".lkt-tag-shortcut")?.addEventListener("mouseleave", disarm, { once: true });
+      removeShortcut(rm.dataset.lktRemove);
       return;
     }
     const shortcut = e.target.closest("[data-lkt-shortcut]");
@@ -1276,6 +1301,13 @@
     new MutationObserver((muts) => {
       // Ignore mutations inside our own UI.
       if (muts.every(ours)) return;
+      // Mark new tag pills straight away (before the next frame), so a pinned tag's pill that
+      // LegendKeeper just added is hidden before it's ever painted.
+      if (settings().tagShortcuts) {
+        try {
+          markTagSources(document);
+        } catch {}
+      }
       scheduleRender();
     }).observe(document.body, { childList: true, subtree: true });
     window.addEventListener("lkt:settings-changed", () => {
@@ -1283,6 +1315,7 @@
       scheduleRender();
     });
     window.addEventListener("popstate", scheduleRender);
+    document.addEventListener("input", (e) => e.target?.matches?.('input[placeholder^="Find by name"]') && scheduleRender(), true);
     // Store data (covers, tags, names) can change without touching the DOM, so poll lightly.
     setInterval(scheduleRender, 2000);
     setInterval(() => {
