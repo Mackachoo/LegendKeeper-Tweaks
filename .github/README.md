@@ -2,8 +2,6 @@
 
 <img src="../icons/icon128.png" width="180" align="right" alt="LegendKeeper Tweaks logo" />
 
-[![Deploy to Chrome Web Store](https://github.com/Mackachoo/LegendKeeper-Tweaks/actions/workflows/deploy.yml/badge.svg)](https://github.com/Mackachoo/LegendKeeper-Tweaks/actions/workflows/deploy.yml)
-
 A Chrome extension that adds quality-of-life tweaks to [LegendKeeper](https://www.legendkeeper.com), the worldbuilding wiki for tabletop games and fiction: page tabs, tag shortcuts, a Project Browser filter that keeps your tree intact, cover images as page icons, bulk page settings, recent pages and more.
 
 It mostly changes how LegendKeeper looks and behaves in your browser. The one exception is **Set for subpages**, which changes page settings in your world, and only after you review and confirm it.
