@@ -1,6 +1,6 @@
 # LegendKeeper Tweaks
 
-<img src="../icons/icon128.png" width="128" align="right" alt="LegendKeeper Tweaks logo" />
+<img src="../icons/icon128.png" width="256" align="right" alt="LegendKeeper Tweaks logo" />
 
 [![Deploy to Chrome Web Store](https://github.com/Mackachoo/LegendKeeper-Tweaks/actions/workflows/deploy.yml/badge.svg)](https://github.com/Mackachoo/LegendKeeper-Tweaks/actions/workflows/deploy.yml)
 
